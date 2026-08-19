@@ -4,6 +4,8 @@ frontend/.next/
 frontend/out/
 frontend/.env.local
 frontend/.env.*.local
+frontend/.vercel/
+frontend/tsconfig.tsbuildinfo
 
 # Python
 backend/.venv/
@@ -12,6 +14,10 @@ backend/*.pyc
 backend/*.db
 backend/*.sqlite3
 backend/.env
+frontend/api/app/__pycache__/
+frontend/api/app/*/__pycache__/
+__pycache__/
+*.pyc
 
 # General
 .DS_Store

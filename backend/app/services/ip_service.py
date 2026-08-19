@@ -5,10 +5,15 @@ IP + WHOIS intelligence service.
 """
 import socket
 import requests
-import whois as whois_lib
+try:
+    import whois as whois_lib
+except Exception:
+    whois_lib = None
 
 
 def get_whois(domain: str) -> dict:
+    if whois_lib is None:
+        return {"error": "WHOIS lookup not available in this environment"}
     try:
         # Avoid blocking indefinitely on whois socket lookups
         w = whois_lib.whois(domain)

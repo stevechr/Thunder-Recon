@@ -34,10 +34,20 @@ module.exports = {
           "0%, 100%": { opacity: 1 },
           "50%": { opacity: 0.3 },
         },
+        fadeIn: {
+          "0%": { opacity: 0, transform: "translateY(8px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
+        slideUp: {
+          "0%": { opacity: 0, transform: "translateY(16px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
       },
       animation: {
         sweep: "sweep 4s linear infinite",
         blink: "blink 1.4s ease-in-out infinite",
+        fadeIn: "fadeIn 0.4s ease-out forwards",
+        slideUp: "slideUp 0.35s ease-out forwards",
       },
     },
   },
