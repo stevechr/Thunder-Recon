@@ -7,7 +7,7 @@ from app.routers import scan, breach, auth, analyze, sandbox, ip, ssl_router, dn
 app = FastAPI(
     title="Thunder Recon API",
     description="Advanced Cybersecurity Reconnaissance & Threat Intelligence API.",
-    version="3.0.0",
+    version="4.0.0",
 )
 
 app.add_middleware(
@@ -37,3 +37,4 @@ try:
     init_db()
 except Exception:
     pass
+
