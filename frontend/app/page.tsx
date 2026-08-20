@@ -31,6 +31,8 @@ import AttackSurfaceDiff from "@/components/AttackSurfaceDiff";
 import MitreNavigator from "@/components/MitreNavigator";
 import MonitoringAlerts from "@/components/MonitoringAlerts";
 import LiveThreatFeed from "@/components/LiveThreatFeed";
+import DnsPropagation from "@/components/DnsPropagation";
+import CommandPalette from "@/components/CommandPalette";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
 import { runScan, ScanResult } from "@/lib/api";
 
@@ -42,6 +44,7 @@ type Mode =
   | "mitre"
   | "threat_feed"
   | "alerts"
+  | "dns_prop"
   | "ip"
   | "ssl"
   | "dns"
@@ -81,6 +84,7 @@ const TABS: TabItem[] = [
   { key: "mitre",       icon: "🗺️",  label: "MITRE ATT&CK",       category: "command", accent: "red" },
   { key: "threat_feed", icon: "📡",  label: "CISA KEV Feed",      category: "command", accent: "red" },
   { key: "alerts",      icon: "🔔",  label: "Alert Webhooks",     category: "command", accent: "purple" },
+  { key: "dns_prop",    icon: "🌐",  label: "DNS Propagation",    category: "perimeter", accent: "cyan" },
   { key: "sandbox",     icon: "🧪",  label: "Sandbox",             category: "threat", accent: "violet" },
   { key: "ip",          icon: "🌐",  label: "IP Threat Map",        category: "perimeter" },
   { key: "ssl",         icon: "🔐",  label: "SSL Auditor",          category: "perimeter" },
@@ -114,6 +118,7 @@ export default function Home() {
   const [error, setError]           = useState<string | null>(null);
   const [user, setUser]             = useState<AuthUser | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [pendingTargetDomain, setPendingTargetDomain] = useState("");
   const [authModalProvider, setAuthModalProvider]     = useState<ProviderType>("google");
 
@@ -174,16 +179,27 @@ export default function Home() {
           </div>
           <div>
             <span className="font-display font-extrabold text-sm tracking-tight text-white">Thunder Recon</span>
-            <span className="hidden sm:inline ml-2 text-[10px] font-mono text-cyan-signal/80 bg-cyan-signal/10 px-1.5 py-0.5 rounded border border-cyan-signal/20">v3.5 Enterprise</span>
+            <span className="hidden sm:inline ml-2 text-[10px] font-mono text-cyan-signal/80 bg-cyan-signal/10 px-1.5 py-0.5 rounded border border-cyan-signal/20">v4.0 Enterprise</span>
           </div>
         </div>
-        {user ? (
-          <UserHeaderBadge user={user} onSignOut={handleSignOut} />
-        ) : (
-          <div className="text-[11px] font-mono text-mist/50 hidden sm:block">
-            Unified Cybersecurity &amp; Threat Intelligence Suite
-          </div>
-        )}
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-void/80 border border-panelBorder hover:border-cyan-signal/50 text-xs font-mono text-mist hover:text-white flex items-center gap-2 transition cursor-pointer shadow-sm"
+          >
+            <span>🔍 Search Tools</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-panel text-[10px] text-cyan-signal border border-panelBorder font-bold">Ctrl+K</kbd>
+          </button>
+
+          {user ? (
+            <UserHeaderBadge user={user} onSignOut={handleSignOut} />
+          ) : (
+            <div className="text-[11px] font-mono text-mist/50 hidden md:block">
+              Unified Cyber Command Center
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ── Hero ── */}
@@ -355,6 +371,13 @@ export default function Home() {
         </div>
       )}
 
+      {/* Global DNS Propagation & Multi-Resolver */}
+      {activeMode === "dns_prop" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <DnsPropagation />
+        </div>
+      )}
+
       {/* 3. IP Threat Map */}
       {activeMode === "ip" && (
         <div className="w-full flex justify-center animate-fadeIn">
@@ -511,6 +534,20 @@ export default function Home() {
         targetDomain={pendingTargetDomain}
       />
 
+      {/* Global Quick Launcher Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectMode={(modeKey) => {
+          setActiveMode(modeKey as any);
+          setResult(null);
+          setError(null);
+        }}
+        onTriggerScan={(domainToScan) => {
+          handleScan(domainToScan, true, true, true, user?.email || "");
+        }}
+      />
+
       {/* ── Platform Summary Footer ── */}
       <footer className="w-full max-w-6xl mt-16 pt-8 border-t border-panelBorder/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-mist/60">
         <div className="flex items-center gap-2">
@@ -518,7 +555,7 @@ export default function Home() {
           <span>Thunder Recon v4.0 Cyber Command Center • All Systems Operational</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>28 Enterprise Security Engines</span>
+          <span>29 Enterprise Security Engines</span>
           <span>•</span>
           <span>15B+ Breach Records</span>
           <span>•</span>
