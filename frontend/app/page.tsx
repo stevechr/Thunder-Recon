@@ -64,39 +64,51 @@ type Mode =
   | "toolkit"
   | "history";
 
-const TABS: { key: Mode; icon: string; label: string; accent?: string }[] = [
-  { key: "domain",      icon: "🛡️",  label: "Domain Recon"       },
-  { key: "report",      icon: "📑",  label: "Executive Audit",   accent: "violet" },
-  { key: "diff",        icon: "⚖️",  label: "Surface Diff",      accent: "cyan" },
-  { key: "mitre",       icon: "🗺️",  label: "MITRE ATT&CK",      accent: "red" },
-  { key: "threat_feed", icon: "📡",  label: "CISA KEV Feed",     accent: "red" },
-  { key: "alerts",      icon: "🔔",  label: "Alert Webhooks",    accent: "purple" },
-  { key: "sandbox",     icon: "🧪",  label: "Sandbox",            accent: "violet" },
-  { key: "ip",          icon: "🌐",  label: "IP Threat Map"       },
-  { key: "ssl",         icon: "🔐",  label: "SSL Auditor"         },
-  { key: "dns",         icon: "📡",  label: "DNS Intelligence"    },
-  { key: "headers",     icon: "📋",  label: "Security Headers"    },
-  { key: "whois",       icon: "🕵️",  label: "WHOIS Intel"         },
-  { key: "tech",        icon: "🎯",  label: "Stack Fingerprint"   },
-  { key: "cve",         icon: "🔍",  label: "CVE Lookup"          },
-  { key: "mail_header", icon: "📬",  label: "Mail Header"         },
-  { key: "pwned",       icon: "⚡",  label: "Breach Leaks"        },
-  { key: "email",       icon: "📧",  label: "Email Security",     accent: "violet" },
-  { key: "buckets",     icon: "🪣",  label: "Cloud Buckets",      accent: "cyan" },
-  { key: "phishing",    icon: "🎣",  label: "Phishing Threat",    accent: "red" },
-  { key: "ports",       icon: "🔌",  label: "Port Scanner",       accent: "orange" },
-  { key: "crawl",       icon: "🤖",  label: "Robots & Sitemap",   accent: "emerald" },
-  { key: "dorks",       icon: "🎯",  label: "Dork Generator",     accent: "amber" },
-  { key: "subdomains",  icon: "🕸️",  label: "Subdomains"          },
-  { key: "waf",         icon: "🛡️",  label: "WAF Tester",         accent: "red" },
-  { key: "asn",         icon: "🌍",  label: "ASN / BGP"           },
-  { key: "osint",       icon: "📡",  label: "OSINT",              accent: "purple" },
-  { key: "toolkit",     icon: "🛠️",  label: "Cyber Toolkit"       },
-  { key: "history",     icon: "📊",  label: "Scan History"        },
+type TabCategory = "all" | "command" | "perimeter" | "threat" | "infra" | "toolkit";
+
+interface TabItem {
+  key: Mode;
+  icon: string;
+  label: string;
+  category: "command" | "perimeter" | "threat" | "infra" | "toolkit";
+  accent?: string;
+}
+
+const TABS: TabItem[] = [
+  { key: "domain",      icon: "🛡️",  label: "Domain Recon",       category: "perimeter" },
+  { key: "report",      icon: "📑",  label: "Executive Audit",    category: "command", accent: "violet" },
+  { key: "diff",        icon: "⚖️",  label: "Surface Diff",       category: "command", accent: "cyan" },
+  { key: "mitre",       icon: "🗺️",  label: "MITRE ATT&CK",       category: "command", accent: "red" },
+  { key: "threat_feed", icon: "📡",  label: "CISA KEV Feed",      category: "command", accent: "red" },
+  { key: "alerts",      icon: "🔔",  label: "Alert Webhooks",     category: "command", accent: "purple" },
+  { key: "sandbox",     icon: "🧪",  label: "Sandbox",             category: "threat", accent: "violet" },
+  { key: "ip",          icon: "🌐",  label: "IP Threat Map",        category: "perimeter" },
+  { key: "ssl",         icon: "🔐",  label: "SSL Auditor",          category: "perimeter" },
+  { key: "dns",         icon: "📡",  label: "DNS Intelligence",     category: "perimeter" },
+  { key: "headers",     icon: "📋",  label: "Security Headers",     category: "perimeter" },
+  { key: "whois",       icon: "🕵️",  label: "WHOIS Intel",          category: "perimeter" },
+  { key: "tech",        icon: "🎯",  label: "Stack Fingerprint",    category: "infra" },
+  { key: "cve",         icon: "🔍",  label: "CVE Lookup",           category: "threat" },
+  { key: "mail_header", icon: "📬",  label: "Mail Header",          category: "threat" },
+  { key: "pwned",       icon: "⚡",  label: "Breach Leaks",         category: "threat" },
+  { key: "email",       icon: "📧",  label: "Email Security",      category: "threat", accent: "violet" },
+  { key: "buckets",     icon: "🪣",  label: "Cloud Buckets",       category: "infra", accent: "cyan" },
+  { key: "phishing",    icon: "🎣",  label: "Phishing Threat",     category: "threat", accent: "red" },
+  { key: "ports",       icon: "🔌",  label: "Port Scanner",        category: "infra", accent: "orange" },
+  { key: "crawl",       icon: "🤖",  label: "Robots & Sitemap",    category: "infra", accent: "emerald" },
+  { key: "dorks",       icon: "🎯",  label: "Dork Generator",      category: "infra", accent: "amber" },
+  { key: "subdomains",  icon: "🕸️",  label: "Subdomains",           category: "perimeter" },
+  { key: "waf",         icon: "🛡️",  label: "WAF Tester",          category: "perimeter", accent: "red" },
+  { key: "asn",         icon: "🌍",  label: "ASN / BGP",            category: "perimeter" },
+  { key: "osint",       icon: "📡",  label: "OSINT",               category: "threat", accent: "purple" },
+  { key: "toolkit",     icon: "🛠️",  label: "Cyber Toolkit",        category: "toolkit" },
+  { key: "history",     icon: "📊",  label: "Scan History",         category: "toolkit" },
 ];
 
 export default function Home() {
   const [activeMode, setActiveMode] = useState<Mode>("domain");
+  const [tabCategory, setTabCategory] = useState<TabCategory>("all");
+  const [tabSearch, setTabSearch] = useState("");
   const [loading, setLoading]       = useState(false);
   const [result, setResult]         = useState<ScanResult | null>(null);
   const [error, setError]           = useState<string | null>(null);
@@ -198,16 +210,47 @@ export default function Home() {
           Enterprise Security Reconnaissance, Threat Intel &amp; Detonation Platform
         </p>
 
+        {/* ── Category Filter Bar ── */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mt-6 max-w-5xl">
+          {[
+            { id: "all", label: "🌟 All Modules", count: TABS.length },
+            { id: "command", label: "📑 Command & Compliance", count: TABS.filter(t => t.category === "command").length },
+            { id: "perimeter", label: "🛡️ Perimeter & DNS", count: TABS.filter(t => t.category === "perimeter").length },
+            { id: "threat", label: "🔬 Threat & Forensics", count: TABS.filter(t => t.category === "threat").length },
+            { id: "infra", label: "🔌 Infra & Cloud", count: TABS.filter(t => t.category === "infra").length },
+            { id: "toolkit", label: "🛠️ Toolkits", count: TABS.filter(t => t.category === "toolkit").length },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setTabCategory(cat.id as any)}
+              className={`text-xs px-3 py-1.5 rounded-xl border transition-all font-semibold cursor-pointer ${
+                tabCategory === cat.id
+                  ? "bg-void text-cyan-400 border-cyan-500/60 shadow-sm shadow-cyan-500/10"
+                  : "bg-panel/60 text-mist/80 border-panelBorder/70 hover:text-white"
+              }`}
+            >
+              <span>{cat.label}</span>
+              <span className="text-[10px] opacity-60 ml-1 font-mono">({cat.count})</span>
+            </button>
+          ))}
+        </div>
+
         {/* ── Mode Tabs ── */}
-        <div className="flex flex-wrap justify-center bg-panel/90 border border-panelBorder p-1.5 rounded-2xl mt-6 gap-1 shadow-lg backdrop-blur-sm max-w-5xl">
-          {TABS.map((tab) => {
+        <div className="flex flex-wrap justify-center bg-panel/90 border border-panelBorder p-1.5 rounded-2xl mt-3 gap-1 shadow-lg backdrop-blur-sm max-w-5xl">
+          {TABS.filter((tab) => {
+            if (tabCategory !== "all" && tab.category !== tabCategory) return false;
+            if (tabSearch.trim() && !tab.label.toLowerCase().includes(tabSearch.toLowerCase()) && !tab.key.toLowerCase().includes(tabSearch.toLowerCase())) {
+              return false;
+            }
+            return true;
+          }).map((tab) => {
             const isActive = activeMode === tab.key;
             const isViolet = tab.accent === "violet";
             return (
               <button
                 key={tab.key}
                 onClick={() => { setActiveMode(tab.key); setResult(null); setError(null); }}
-                className={`relative px-3 py-1.5 rounded-xl font-display text-xs md:text-sm font-semibold transition-all duration-200 ${
+                className={`relative px-3 py-1.5 rounded-xl font-display text-xs md:text-sm font-semibold transition-all duration-200 cursor-pointer ${
                   isActive
                     ? isViolet
                       ? "bg-violet-500 text-white shadow-md shadow-violet-500/25"
