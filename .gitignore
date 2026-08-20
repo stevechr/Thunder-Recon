@@ -1,4 +1,11 @@
 # Node / Next.js
+node_modules/
+.next/
+out/
+.vercel/
+.env.local
+.env.*.local
+tsconfig.tsbuildinfo
 frontend/node_modules/
 frontend/.next/
 frontend/out/
@@ -14,6 +21,8 @@ backend/*.pyc
 backend/*.db
 backend/*.sqlite3
 backend/.env
+api/app/__pycache__/
+api/app/*/__pycache__/
 frontend/api/app/__pycache__/
 frontend/api/app/*/__pycache__/
 __pycache__/
