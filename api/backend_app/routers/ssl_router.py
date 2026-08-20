@@ -4,7 +4,7 @@ SSL/TLS Inspector Router
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services import ssl_service
+from backend_app.services import ssl_service
 
 router = APIRouter(tags=["ssl"])
 

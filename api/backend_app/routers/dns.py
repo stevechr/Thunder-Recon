@@ -4,7 +4,7 @@ DNS Record & Security Audit Router
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services import dns_service
+from backend_app.services import dns_service
 
 router = APIRouter(tags=["dns"])
 

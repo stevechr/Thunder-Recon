@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from app.services import url_service, mail_header_service
+from backend_app.services import url_service, mail_header_service
 
 router = APIRouter(tags=["analyze"])
 

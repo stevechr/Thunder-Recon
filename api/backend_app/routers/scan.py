@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from sqlalchemy.orm import Session
 
-from app.models import ScanRequest, ScanResponse
-from app.services import (
+from backend_app.models import ScanRequest, ScanResponse
+from backend_app.services import (
     dns_service,
     ip_service,
     ssl_service,
@@ -14,8 +14,8 @@ from app.services import (
     threat_service,
     virustotal_service,
 )
-from app.database import get_db, ScanRecord
-from app.routers.auth import verify_session_token
+from backend_app.database import get_db, ScanRecord
+from backend_app.routers.auth import verify_session_token
 
 router = APIRouter(tags=["scan"])
 

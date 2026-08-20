@@ -31,3 +31,5 @@ __pycache__/
 # General
 .DS_Store
 *.log
+
+.vercel

@@ -6,7 +6,7 @@ Accepts file uploads and URL submissions for behavioral threat analysis.
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
 
-from app.services import sandbox_service, url_service
+from backend_app.services import sandbox_service, url_service
 
 router = APIRouter(tags=["sandbox"])
 

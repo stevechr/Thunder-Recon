@@ -4,7 +4,7 @@ HTTP Security Headers Router
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services import headers_service
+from backend_app.services import headers_service
 
 router = APIRouter(tags=["headers"])
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.models import EmailCheckRequest, PasswordCheckRequest
-from app.services import breach_service
+from backend_app.models import EmailCheckRequest, PasswordCheckRequest
+from backend_app.services import breach_service
 
 router = APIRouter(tags=["breach"])
 

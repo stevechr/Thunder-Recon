@@ -4,7 +4,7 @@ IP Intelligence Router
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services import ip_service
+from backend_app.services import ip_service
 
 router = APIRouter(tags=["ip"])
 

@@ -12,7 +12,7 @@ import requests
 import socket
 import base64
 from urllib.parse import urlparse, parse_qs
-from app.services import virustotal_service
+from backend_app.services import virustotal_service
 
 PHISHING_KEYWORDS = [
     "login", "signin", "verify", "secure", "account", "update", "banking",

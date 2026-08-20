@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import socket
 
-from app.routers.auth import verify_session_token
-from app.services import (
+from backend_app.routers.auth import verify_session_token
+from backend_app.services import (
     subdomain_service,
     asn_service,
     osint_service,

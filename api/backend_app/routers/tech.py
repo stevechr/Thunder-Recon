@@ -4,7 +4,7 @@ Web Tech Stack Fingerprinting Router
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services import tech_service
+from backend_app.services import tech_service
 
 router = APIRouter(tags=["tech"])
 
