@@ -34,6 +34,7 @@ import LiveThreatFeed from "@/components/LiveThreatFeed";
 import DnsPropagation from "@/components/DnsPropagation";
 import CommandPalette from "@/components/CommandPalette";
 import AttackGraph from "@/components/AttackGraph";
+import LiveAttackMap from "@/components/LiveAttackMap";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
 import { runScan, ScanResult } from "@/lib/api";
 
@@ -66,6 +67,7 @@ type Mode =
   | "waf"
   | "asn"
   | "osint"
+  | "live_map"
   | "toolkit"
   | "history";
 
@@ -81,6 +83,7 @@ interface TabItem {
 
 const TABS: TabItem[] = [
   { key: "domain",      icon: "🛡️",  label: "Domain Recon",       category: "perimeter" },
+  { key: "live_map",    icon: "🌍",  label: "Live Attack Map",    category: "command", accent: "red" },
   { key: "topology",    icon: "🕸️",  label: "Attack Topology",    category: "command", accent: "cyan" },
   { key: "report",      icon: "📑",  label: "Executive Audit",    category: "command", accent: "violet" },
   { key: "diff",        icon: "⚖️",  label: "Surface Diff",       category: "command", accent: "cyan" },
@@ -412,7 +415,7 @@ export default function Home() {
                   { mode: "threat_feed", icon: "📡", title: "CISA KEV Live Stream", desc: "Real-time catalog of weaponized zero-days and ransomware threats.", accent: "border-red-500/30 bg-red-500/5 hover:border-red-500/60" },
                   { mode: "email", icon: "📧", title: "Email Security & DMARC", desc: "Audit SPF lookup count, DKIM selectors & spoofing grade.", accent: "border-violet-500/30 bg-violet-500/5 hover:border-violet-500/60" },
                   { mode: "buckets", icon: "🪣", title: "Cloud Bucket Hunter", desc: "Search exposed AWS S3, Google Cloud, Azure Blob & DO Spaces.", accent: "border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/60" },
-                  { mode: "dns_prop", icon: "🌐", title: "Global DNS Propagation", desc: "Audit DNS sync consistency across 12 worldwide tier-1 resolvers.", accent: "border-blue-500/30 bg-blue-500/5 hover:border-blue-500/60" },
+                  { mode: "live_map", icon: "🌍", title: "Live Attack Map", desc: "Interactive 3D WebGL globe rendering real-time global cyber threats.", accent: "border-red-500/30 bg-red-500/5 hover:border-red-500/60" },
                 ].map((item) => (
                   <div
                     key={item.mode}
@@ -436,6 +439,13 @@ export default function Home() {
       {activeMode === "topology" && (
         <div className="w-full flex justify-center animate-fadeIn">
           <AttackGraph result={result} />
+        </div>
+      )}
+
+      {/* Live WebGL Cyber Attack Map */}
+      {activeMode === "live_map" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <LiveAttackMap />
         </div>
       )}
 
@@ -665,7 +675,7 @@ export default function Home() {
           <span>Thunder Recon v4.0 Cyber Command Center • All Systems Operational</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>30 Enterprise Security Engines</span>
+          <span>31 Enterprise Security Engines</span>
           <span>•</span>
           <span>15B+ Breach Records</span>
           <span>•</span>
