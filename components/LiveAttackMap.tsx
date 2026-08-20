@@ -49,7 +49,7 @@ const ATTACK_TYPES = [
   { name: "Port Scan", color: "#a855f7", port: 0, threat: "LOW" },
 ];
 
-export default function LiveAttackMap() {
+export default function LiveAttackMap({ isFullscreenBg = false }: { isFullscreenBg?: boolean }) {
   const globeEl = useRef<any>(null);
   
   // Simulation State
@@ -150,7 +150,11 @@ export default function LiveAttackMap() {
   const defcon = getDefconLevel();
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-4 h-[75vh] min-h-[600px] border border-panelBorder/40 rounded-2xl bg-[#000005] overflow-hidden relative font-mono shadow-2xl shadow-cyan-900/10">
+    <div className={`w-full flex flex-col lg:flex-row relative font-mono shadow-2xl shadow-cyan-900/10 ${
+      isFullscreenBg 
+        ? "h-full bg-black" 
+        : "gap-4 h-[75vh] min-h-[600px] border border-panelBorder/40 rounded-2xl bg-[#000005] overflow-hidden"
+    }`}>
       
       {/* 3D WebGL Globe */}
       <div className="flex-1 w-full h-full relative cursor-move">
