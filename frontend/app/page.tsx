@@ -69,6 +69,7 @@ type Mode =
   | "osint"
   | "toolkit"
   | "history"
+  | "robots"
   | "none";
 
 interface TabItem {
@@ -380,14 +381,19 @@ export default function Home() {
       <CommandPalette 
         isOpen={isCommandPaletteOpen} 
         onClose={() => setIsCommandPaletteOpen(false)} 
-        onSelect={(mode) => setActiveMode(mode as Mode)} 
+        onSelectMode={(mode) => setActiveMode(mode as Mode)} 
+        onTriggerScan={(domain) => {
+          setActiveMode("domain");
+          // Optionally trigger scan if possible, or let the user type in the ScanForm
+        }}
       />
 
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
-        onSuccess={handleAuthSuccess} 
-        defaultProvider={authModalProvider} 
+        onAuthenticated={handleAuthSuccess} 
+        initialProvider={authModalProvider} 
+        targetDomain=""
       />
 
     </div>
