@@ -15,6 +15,11 @@ import SecurityHeaders from "@/components/SecurityHeaders";
 import WhoisLookup from "@/components/WhoisLookup";
 import TechDetector from "@/components/TechDetector";
 import AuthModal from "@/components/AuthModal";
+import SubdomainEnumerator from "@/components/SubdomainEnumerator";
+import ScanHistory from "@/components/ScanHistory";
+import AsnIntelligence from "@/components/AsnIntelligence";
+import OsintAggregator from "@/components/OsintAggregator";
+import WafTester from "@/components/WafTester";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
 import { runScan, ScanResult } from "@/lib/api";
 
@@ -30,7 +35,12 @@ type Mode =
   | "cve"
   | "mail_header"
   | "pwned"
-  | "toolkit";
+  | "toolkit"
+  | "subdomains"
+  | "history"
+  | "asn"
+  | "osint"
+  | "waf";
 
 const TABS: { key: Mode; icon: string; label: string; accent?: string }[] = [
   { key: "domain",      icon: "🛡️",  label: "Domain Recon"       },
@@ -45,6 +55,11 @@ const TABS: { key: Mode; icon: string; label: string; accent?: string }[] = [
   { key: "mail_header", icon: "📬",  label: "Mail Header"         },
   { key: "pwned",       icon: "⚡",  label: "Breach Leaks"        },
   { key: "toolkit",     icon: "🛠️",  label: "Cyber Toolkit"       },
+  { key: "subdomains",  icon: "🕸️",  label: "Subdomains"          },
+  { key: "history",     icon: "📊",  label: "Scan History"        },
+  { key: "asn",         icon: "🌍",  label: "ASN / BGP"           },
+  { key: "osint",       icon: "📡",  label: "OSINT"               , accent: "purple" },
+  { key: "waf",         icon: "🛡️",  label: "WAF Tester"          , accent: "red" },
 ];
 
 export default function Home() {
@@ -163,6 +178,10 @@ export default function Home() {
                   isActive
                     ? isViolet
                       ? "bg-violet-500 text-white shadow-md shadow-violet-500/25"
+                      : tab.accent === "purple"
+                      ? "bg-purple-500 text-white shadow-md shadow-purple-500/25"
+                      : tab.accent === "red"
+                      ? "bg-red-500 text-white shadow-md shadow-red-500/25"
                       : "bg-cyan-signal text-void shadow-md shadow-cyan-signal/25"
                     : "text-mist hover:text-white hover:bg-void/60"
                 }`}
@@ -170,7 +189,9 @@ export default function Home() {
                 <span className="mr-1">{tab.icon}</span>
                 {tab.label}
                 {isActive && (
-                  <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isViolet ? "bg-violet-300" : "bg-void"} -mb-0.5`} />
+                  <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
+                    isViolet ? "bg-violet-300" : tab.accent === "purple" ? "bg-purple-300" : tab.accent === "red" ? "bg-red-300" : "bg-void"
+                  } -mb-0.5`} />
                 )}
               </button>
             );
@@ -293,6 +314,41 @@ export default function Home() {
         </div>
       )}
 
+      {/* 13. Subdomain Enumerator */}
+      {activeMode === "subdomains" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <SubdomainEnumerator />
+        </div>
+      )}
+
+      {/* 14. Scan History */}
+      {activeMode === "history" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <ScanHistory />
+        </div>
+      )}
+
+      {/* 15. ASN / BGP Intelligence */}
+      {activeMode === "asn" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <AsnIntelligence />
+        </div>
+      )}
+
+      {/* 16. OSINT Aggregator */}
+      {activeMode === "osint" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <OsintAggregator />
+        </div>
+      )}
+
+      {/* 17. WAF / Firewall Tester */}
+      {activeMode === "waf" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <WafTester />
+        </div>
+      )}
+
       {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
@@ -309,7 +365,7 @@ export default function Home() {
           <span>Thunder Recon v3.5 Enterprise Engine • All Systems Operational</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>12 Security Modules</span>
+          <span>17 Security Modules</span>
           <span>•</span>
           <span>15B+ Breach Records</span>
           <span>•</span>

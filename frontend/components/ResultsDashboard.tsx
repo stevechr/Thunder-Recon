@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ScanResult } from "@/lib/api";
 import RiskGauge from "./RiskGauge";
+import AttackGraph from "./AttackGraph";
 
 function Badge({ status }: { status: string }) {
   if (status === "PASS" || status === "harmless" || status === "clean") {
@@ -75,7 +76,7 @@ function ModuleCard({
 export default function ResultsDashboard({ result }: { result: ScanResult }) {
   const { dns_records, whois, ip_intel, ssl, ports, technology, breaches, risk, audit_modules, threat_intel, virustotal } = result;
   
-  const [activeTab, setActiveTab] = useState<"overview" | "audit12" | "virustotal" | "remediations" | "subdomains">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "graph" | "audit12" | "virustotal" | "remediations" | "subdomains">("overview");
   const [showAllEngines, setShowAllEngines] = useState(false);
   const [subdomainSearch, setSubdomainSearch] = useState("");
 
@@ -119,6 +120,10 @@ ${Object.entries(audit_modules || {}).filter(([k]) => !k.startsWith("_")).map(([
     downloadAnchor.remove();
   };
 
+  const printExecutiveReport = () => {
+    window.print();
+  };
+
   const m01 = audit_modules?.["01_asset_subdomains"];
   const m02 = audit_modules?.["02_cdn_waf"];
   const m03 = audit_modules?.["03_ports_services"];
@@ -159,7 +164,7 @@ ${Object.entries(audit_modules || {}).filter(([k]) => !k.startsWith("_")).map(([
           </div>
 
           {/* Export Actions */}
-          <div className="flex items-center gap-3 mt-4">
+          <div className="flex items-center gap-2.5 mt-4 flex-wrap">
             <button
               onClick={downloadReportJson}
               className="px-3.5 py-1.5 rounded-lg text-xs font-mono border border-cyan-signal/40 text-cyan-signal hover:bg-cyan-signal/10 transition shadow-sm"
@@ -171,6 +176,12 @@ ${Object.entries(audit_modules || {}).filter(([k]) => !k.startsWith("_")).map(([
               className="px-3.5 py-1.5 rounded-lg text-xs font-mono border border-panelBorder text-mist hover:text-white transition shadow-sm"
             >
               ↓ Export Markdown
+            </button>
+            <button
+              onClick={printExecutiveReport}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-mono border border-purple-500/40 text-purple-300 hover:bg-purple-500/10 transition shadow-sm"
+            >
+              🖨️ Print CISO Executive Report
             </button>
           </div>
         </div>
@@ -187,7 +198,17 @@ ${Object.entries(audit_modules || {}).filter(([k]) => !k.startsWith("_")).map(([
               : "bg-void/60 text-mist hover:text-white border border-panelBorder"
           }`}
         >
-          🛡️ Overview & Threats
+          🛡️ Overview &amp; Threats
+        </button>
+        <button
+          onClick={() => setActiveTab("graph")}
+          className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition ${
+            activeTab === "graph"
+              ? "bg-cyan-signal/20 text-cyan-signal border border-cyan-signal/40 shadow-sm"
+              : "bg-void/60 text-mist hover:text-white border border-panelBorder"
+          }`}
+        >
+          🕸️ Attack Surface Topology
         </button>
         <button
           onClick={() => setActiveTab("audit12")}
@@ -230,6 +251,9 @@ ${Object.entries(audit_modules || {}).filter(([k]) => !k.startsWith("_")).map(([
           🔧 Remediation Roadmap ({remediations.length})
         </button>
       </div>
+
+      {/* TAB 0: ATTACK GRAPH */}
+      {activeTab === "graph" && <AttackGraph result={result} />}
 
       {/* TAB 1: OVERVIEW & THREATS */}
       {(activeTab === "overview" || activeTab === "virustotal") && virustotal && (

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
-from app.routers import scan, breach, auth, analyze, sandbox, ip, ssl_router, dns, cve, headers, whois_router, tech
+from app.routers import scan, breach, auth, analyze, sandbox, ip, ssl_router, dns, cve, headers, whois_router, tech, tools
 
 app = FastAPI(
     title="Thunder Recon API",
@@ -30,6 +30,7 @@ app.include_router(cve.router)
 app.include_router(headers.router)
 app.include_router(whois_router.router)
 app.include_router(tech.router)
+app.include_router(tools.router)
 
 
 try:
