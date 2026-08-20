@@ -26,12 +26,22 @@ import PhishingDetector from "@/components/PhishingDetector";
 import PortScanner from "@/components/PortScanner";
 import RobotsIntel from "@/components/RobotsIntel";
 import DorkGenerator from "@/components/DorkGenerator";
+import ExecutiveReport from "@/components/ExecutiveReport";
+import AttackSurfaceDiff from "@/components/AttackSurfaceDiff";
+import MitreNavigator from "@/components/MitreNavigator";
+import MonitoringAlerts from "@/components/MonitoringAlerts";
+import LiveThreatFeed from "@/components/LiveThreatFeed";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
 import { runScan, ScanResult } from "@/lib/api";
 
 type Mode =
   | "domain"
   | "sandbox"
+  | "report"
+  | "diff"
+  | "mitre"
+  | "threat_feed"
+  | "alerts"
   | "ip"
   | "ssl"
   | "dns"
@@ -56,6 +66,11 @@ type Mode =
 
 const TABS: { key: Mode; icon: string; label: string; accent?: string }[] = [
   { key: "domain",      icon: "🛡️",  label: "Domain Recon"       },
+  { key: "report",      icon: "📑",  label: "Executive Audit",   accent: "violet" },
+  { key: "diff",        icon: "⚖️",  label: "Surface Diff",      accent: "cyan" },
+  { key: "mitre",       icon: "🗺️",  label: "MITRE ATT&CK",      accent: "red" },
+  { key: "threat_feed", icon: "📡",  label: "CISA KEV Feed",     accent: "red" },
+  { key: "alerts",      icon: "🔔",  label: "Alert Webhooks",    accent: "purple" },
   { key: "sandbox",     icon: "🧪",  label: "Sandbox",            accent: "violet" },
   { key: "ip",          icon: "🌐",  label: "IP Threat Map"       },
   { key: "ssl",         icon: "🔐",  label: "SSL Auditor"         },
@@ -262,6 +277,41 @@ export default function Home() {
         </div>
       )}
 
+      {/* Executive Audit & Compliance Report */}
+      {activeMode === "report" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <ExecutiveReport />
+        </div>
+      )}
+
+      {/* Attack Surface Diff & Drift Engine */}
+      {activeMode === "diff" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <AttackSurfaceDiff />
+        </div>
+      )}
+
+      {/* MITRE ATT&CK Matrix Navigator */}
+      {activeMode === "mitre" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <MitreNavigator />
+        </div>
+      )}
+
+      {/* CISA KEV Live Threat Feed */}
+      {activeMode === "threat_feed" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <LiveThreatFeed />
+        </div>
+      )}
+
+      {/* Continuous Monitoring & Alerting */}
+      {activeMode === "alerts" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <MonitoringAlerts />
+        </div>
+      )}
+
       {/* 3. IP Threat Map */}
       {activeMode === "ip" && (
         <div className="w-full flex justify-center animate-fadeIn">
@@ -422,14 +472,14 @@ export default function Home() {
       <footer className="w-full max-w-6xl mt-16 pt-8 border-t border-panelBorder/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-mist/60">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Thunder Recon v3.5 Enterprise Engine • All Systems Operational</span>
+          <span>Thunder Recon v4.0 Cyber Command Center • All Systems Operational</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>23 Enterprise Security Modules</span>
+          <span>28 Enterprise Security Engines</span>
           <span>•</span>
           <span>15B+ Breach Records</span>
           <span>•</span>
-          <span>30+ Threat Feeds</span>
+          <span>CISA KEV Live Feeds</span>
         </div>
       </footer>
     </main>

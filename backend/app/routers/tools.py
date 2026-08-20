@@ -20,6 +20,7 @@ from app.services import (
     phishing_service,
     crawl_service,
     port_service,
+    threat_feed_service,
 )
 
 router = APIRouter(tags=["tools"])
@@ -303,3 +304,14 @@ def port_scan(
         "open_ports_count": len(open_ports),
         "open_ports": open_ports,
     }
+
+
+# ---------------------------------------------------------------------------
+# CISA Known Exploited Vulnerabilities (KEV) Live Threat Feed
+# ---------------------------------------------------------------------------
+
+@router.get("/api/tools/cisa-kev")
+@router.get("/tools/cisa-kev")
+def get_cisa_kev(q: Optional[str] = None, limit: int = 50):
+    return threat_feed_service.fetch_cisa_kev(query=q, limit=limit)
+
