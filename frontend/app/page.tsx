@@ -33,11 +33,13 @@ import MonitoringAlerts from "@/components/MonitoringAlerts";
 import LiveThreatFeed from "@/components/LiveThreatFeed";
 import DnsPropagation from "@/components/DnsPropagation";
 import CommandPalette from "@/components/CommandPalette";
+import AttackGraph from "@/components/AttackGraph";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
 import { runScan, ScanResult } from "@/lib/api";
 
 type Mode =
   | "domain"
+  | "topology"
   | "sandbox"
   | "report"
   | "diff"
@@ -79,6 +81,7 @@ interface TabItem {
 
 const TABS: TabItem[] = [
   { key: "domain",      icon: "🛡️",  label: "Domain Recon",       category: "perimeter" },
+  { key: "topology",    icon: "🕸️",  label: "Attack Topology",    category: "command", accent: "cyan" },
   { key: "report",      icon: "📑",  label: "Executive Audit",    category: "command", accent: "violet" },
   { key: "diff",        icon: "⚖️",  label: "Surface Diff",       category: "command", accent: "cyan" },
   { key: "mitre",       icon: "🗺️",  label: "MITRE ATT&CK",       category: "command", accent: "red" },
@@ -121,6 +124,17 @@ export default function Home() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [pendingTargetDomain, setPendingTargetDomain] = useState("");
   const [authModalProvider, setAuthModalProvider]     = useState<ProviderType>("google");
+  const [utcTime, setUtcTime]                         = useState("");
+
+  useEffect(() => {
+    const updateTime = () => {
+      const d = new Date();
+      setUtcTime(d.toISOString().slice(11, 19) + " UTC");
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     try {
@@ -184,6 +198,13 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3">
+          {utcTime && (
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-void/80 border border-panelBorder text-[11px] font-mono text-cyan-400/90 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span>{utcTime}</span>
+            </div>
+          )}
+
           <button
             onClick={() => setIsCommandPaletteOpen(true)}
             className="px-3 py-1.5 rounded-xl bg-void/80 border border-panelBorder hover:border-cyan-signal/50 text-xs font-mono text-mist hover:text-white flex items-center gap-2 transition cursor-pointer shadow-sm"
@@ -208,7 +229,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4 animate-fadeIn">
           <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            29 CYBER ENGINES ONLINE
+            30 CYBER ENGINES ONLINE
           </span>
           <span className="px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-[10px] font-bold flex items-center gap-1.5">
             <span>🛡️</span> CISA KEV SYNCED
@@ -330,6 +351,21 @@ export default function Home() {
             onUserChange={setUser}
             onRequestAuth={handleRequestAuth}
           />
+
+          {/* Quick Target Preset Chips */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1 max-w-2xl text-xs font-mono">
+            <span className="text-mist/60 text-[11px]">⚡ Quick Targets:</span>
+            {["github.com", "cloudflare.com", "tesla.com", "proton.me", "paypal.com"].map((t) => (
+              <button
+                key={t}
+                onClick={() => handleScan(t, true, true, true, user?.email || "")}
+                className="px-2.5 py-1 rounded-lg bg-void/80 border border-panelBorder hover:border-cyan-signal/60 text-mist hover:text-cyan-300 transition text-[11px] cursor-pointer shadow-sm"
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
           {error && (
             <div className="flex items-center gap-2 text-crimson-risk text-sm border border-crimson-risk/30 bg-crimson-risk/10 rounded-xl px-4 py-3 font-mono max-w-2xl w-full">
               <span>⚠</span> {error}
@@ -369,13 +405,13 @@ export default function Home() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
+                  { mode: "topology", icon: "🕸️", title: "Attack Topology Graph", desc: "Interactive SVG node-graph of perimeter assets and connections.", accent: "border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/60" },
                   { mode: "report", icon: "📑", title: "Executive Audit & CISO Report", desc: "SOC2 / ISO 27001 / NIST CSF compliance matrix + PDF export.", accent: "border-violet-500/30 bg-violet-500/5 hover:border-violet-500/60" },
                   { mode: "diff", icon: "⚖️", title: "Attack Surface Diff", desc: "Compare Staging vs Production perimeter drift & port regressions.", accent: "border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/60" },
                   { mode: "mitre", icon: "🗺️", title: "MITRE ATT&CK Matrix", desc: "Map perimeter vulnerabilities to adversary TTPs & D3FEND controls.", accent: "border-red-500/30 bg-red-500/5 hover:border-red-500/60" },
                   { mode: "threat_feed", icon: "📡", title: "CISA KEV Live Stream", desc: "Real-time catalog of weaponized zero-days and ransomware threats.", accent: "border-red-500/30 bg-red-500/5 hover:border-red-500/60" },
                   { mode: "email", icon: "📧", title: "Email Security & DMARC", desc: "Audit SPF lookup count, DKIM selectors & spoofing grade.", accent: "border-violet-500/30 bg-violet-500/5 hover:border-violet-500/60" },
                   { mode: "buckets", icon: "🪣", title: "Cloud Bucket Hunter", desc: "Search exposed AWS S3, Google Cloud, Azure Blob & DO Spaces.", accent: "border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/60" },
-                  { mode: "ports", icon: "🔌", title: "TCP Port Scanner", desc: "Scan Top 17, Web, Database & SSH ports with banner grabbing.", accent: "border-orange-500/30 bg-orange-500/5 hover:border-orange-500/60" },
                   { mode: "dns_prop", icon: "🌐", title: "Global DNS Propagation", desc: "Audit DNS sync consistency across 12 worldwide tier-1 resolvers.", accent: "border-blue-500/30 bg-blue-500/5 hover:border-blue-500/60" },
                 ].map((item) => (
                   <div
@@ -393,6 +429,13 @@ export default function Home() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Visual Attack Topology Graph */}
+      {activeMode === "topology" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <AttackGraph result={result} />
         </div>
       )}
 
@@ -622,7 +665,7 @@ export default function Home() {
           <span>Thunder Recon v4.0 Cyber Command Center • All Systems Operational</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>29 Enterprise Security Engines</span>
+          <span>30 Enterprise Security Engines</span>
           <span>•</span>
           <span>15B+ Breach Records</span>
           <span>•</span>
