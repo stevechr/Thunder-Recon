@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-type ToolType = "jwt" | "hashes" | "encoders" | "subnet" | "revshell" | "entropy" | "passgen";
+type ToolType = "jwt" | "hashes" | "encoders" | "subnet" | "revshell" | "entropy" | "passgen" | "cookie" | "hashlookup";
 
 // Lightweight pure JS MD5 helper
 function md5(string: string): string {
@@ -464,13 +464,15 @@ export default function SecurityToolkit() {
           {/* Navigation Tabs */}
           <div className="flex bg-void border border-panelBorder rounded-xl p-1 gap-1 overflow-x-auto max-w-full">
             {([
-              { key: "jwt",      label: "🔑 JWT" },
-              { key: "hashes",   label: "⚡ Hashes" },
-              { key: "encoders", label: "🔤 Defanger / Encoders" },
-              { key: "subnet",   label: "🌐 Subnet / CIDR" },
-              { key: "revshell", label: "🐚 Shells" },
-              { key: "entropy",  label: "🛡️ Entropy" },
-              { key: "passgen",  label: "🎲 Pass Generator" },
+              { key: "jwt",        label: "🔑 JWT" },
+              { key: "hashes",     label: "⚡ Hashes" },
+              { key: "encoders",   label: "🔤 Defanger / Encoders" },
+              { key: "subnet",     label: "🌐 Subnet / CIDR" },
+              { key: "revshell",   label: "🐚 Shells" },
+              { key: "entropy",    label: "🛡️ Entropy" },
+              { key: "passgen",    label: "🎲 Pass Generator" },
+              { key: "cookie",     label: "🍪 Cookie Audit" },
+              { key: "hashlookup", label: "🔍 Hash Identifier" },
             ] as const).map((t) => (
               <button
                 key={t.key}
@@ -823,6 +825,16 @@ export default function SecurityToolkit() {
         {activeTool === "passgen" && (
           <PasswordGenerator copyToClipboard={copyToClipboard} copiedKey={copiedKey} />
         )}
+
+        {/* 8. COOKIE SECURITY AUDITOR */}
+        {activeTool === "cookie" && (
+          <CookieAuditor copyToClipboard={copyToClipboard} copiedKey={copiedKey} />
+        )}
+
+        {/* 9. HASH IDENTIFIER & RAINBOW LOOKUP */}
+        {activeTool === "hashlookup" && (
+          <HashLookup copyToClipboard={copyToClipboard} copiedKey={copiedKey} />
+        )}
       </div>
     </div>
   );
@@ -1045,6 +1057,349 @@ function PasswordGenerator({ copyToClipboard, copiedKey }: { copyToClipboard: (t
               </div>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Cookie Security Auditor Sub-component
+// ---------------------------------------------------------------------------
+
+interface ParsedCookie {
+  name: string;
+  value: string;
+  domain: string | null;
+  path: string | null;
+  expires: string | null;
+  maxAge: string | null;
+  sameSite: "Strict" | "Lax" | "None" | "Missing";
+  secure: boolean;
+  httpOnly: boolean;
+  partitioned: boolean;
+  hasHostPrefix: boolean;
+  hasSecurePrefix: boolean;
+  issues: string[];
+  score: number;
+  grade: "A" | "B" | "C" | "D" | "F";
+}
+
+function parseSetCookie(raw: string): ParsedCookie | null {
+  if (!raw.trim()) return null;
+  const parts = raw.trim().split(";").map(p => p.trim());
+  if (!parts.length || !parts[0].includes("=")) return null;
+
+  const [name, ...valParts] = parts[0].split("=");
+  const value = valParts.join("=");
+  let domain: string | null = null;
+  let path: string | null = null;
+  let expires: string | null = null;
+  let maxAge: string | null = null;
+  let sameSite: "Strict" | "Lax" | "None" | "Missing" = "Missing";
+  let secure = false;
+  let httpOnly = false;
+  let partitioned = false;
+
+  for (let i = 1; i < parts.length; i++) {
+    const attr = parts[i];
+    const attrLower = attr.toLowerCase();
+    if (attrLower === "secure") secure = true;
+    else if (attrLower === "httponly") httpOnly = true;
+    else if (attrLower === "partitioned") partitioned = true;
+    else if (attrLower.startsWith("domain=")) domain = attr.slice(7);
+    else if (attrLower.startsWith("path=")) path = attr.slice(5);
+    else if (attrLower.startsWith("expires=")) expires = attr.slice(8);
+    else if (attrLower.startsWith("max-age=")) maxAge = attr.slice(8);
+    else if (attrLower.startsWith("samesite=")) {
+      const ss = attr.slice(9).toLowerCase();
+      if (ss === "strict") sameSite = "Strict";
+      else if (ss === "lax") sameSite = "Lax";
+      else if (ss === "none") sameSite = "None";
+    }
+  }
+
+  const hasHostPrefix = name.startsWith("__Host-");
+  const hasSecurePrefix = name.startsWith("__Secure-");
+
+  let score = 100;
+  const issues: string[] = [];
+
+  if (!httpOnly) {
+    score -= 30;
+    issues.push("CWE-1004: Missing 'HttpOnly' flag — vulnerable to session theft via Cross-Site Scripting (XSS).");
+  }
+  if (!secure) {
+    score -= 35;
+    issues.push("CWE-614: Missing 'Secure' flag — transmitted over cleartext HTTP; prone to Man-in-the-Middle interception.");
+  }
+  if (sameSite === "Missing") {
+    score -= 20;
+    issues.push("CWE-1275: Missing 'SameSite' attribute — browser defaults to Lax, but explicit enforcement is recommended.");
+  } else if (sameSite === "None" && !secure) {
+    score -= 25;
+    issues.push("SameSite=None without Secure flag will be rejected by modern browsers and is susceptible to CSRF.");
+  }
+
+  if (domain && domain.startsWith(".")) {
+    score -= 10;
+    issues.push("Loose domain attribute (wildcard subdomain scope) expands attack surface to rogue subdomains.");
+  }
+
+  if (hasHostPrefix && (!secure || path !== "/" || domain !== null)) {
+    issues.push("__Host- cookie violation: Requires Secure=true, Path=/, and NO Domain attribute.");
+  }
+
+  score = Math.max(0, score);
+  let grade: "A" | "B" | "C" | "D" | "F" = "F";
+  if (score >= 90) grade = "A";
+  else if (score >= 75) grade = "B";
+  else if (score >= 60) grade = "C";
+  else if (score >= 40) grade = "D";
+
+  return {
+    name,
+    value,
+    domain,
+    path,
+    expires,
+    maxAge,
+    sameSite,
+    secure,
+    httpOnly,
+    partitioned,
+    hasHostPrefix,
+    hasSecurePrefix,
+    issues,
+    score,
+    grade,
+  };
+}
+
+function CookieAuditor({ copyToClipboard, copiedKey }: { copyToClipboard: (text: string, key: string) => void; copiedKey: string | null }) {
+  const [cookieInput, setCookieInput] = useState("sessionid=9f8a2c4e61b; Path=/; Secure; HttpOnly; SameSite=Lax");
+  const parsed = parseSetCookie(cookieInput);
+
+  return (
+    <div className="space-y-4 pt-2 font-mono">
+      <div>
+        <label className="text-[10px] text-mist uppercase tracking-widest font-bold block mb-1">
+          Paste Set-Cookie Header or Raw Cookie String
+        </label>
+        <textarea
+          rows={3}
+          value={cookieInput}
+          onChange={(e) => setCookieInput(e.target.value)}
+          placeholder="Set-Cookie: session_id=xyz; Path=/; Secure; HttpOnly; SameSite=Strict"
+          className="w-full px-4 py-3 bg-void border border-panelBorder rounded-xl text-white font-mono text-xs focus:outline-none focus:border-cyan-signal/60 resize-none"
+        />
+      </div>
+
+      {parsed && (
+        <div className="space-y-4 animate-slideUp">
+          {/* Executive Rating Card */}
+          <div className="p-4 bg-void/80 border border-panelBorder rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="text-[10px] text-mist uppercase font-bold">Cookie Security Score</div>
+              <div className="text-2xl font-bold text-white flex items-center gap-3 mt-1 font-display">
+                <span className={`px-3 py-0.5 rounded-lg border text-sm font-mono font-bold ${
+                  parsed.grade === "A" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" :
+                  parsed.grade === "B" ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/40" :
+                  parsed.grade === "C" ? "bg-amber-500/20 text-amber-400 border-amber-500/40" :
+                  "bg-rose-500/20 text-rose-400 border-rose-500/40"
+                }`}>
+                  Grade {parsed.grade} ({parsed.score}/100)
+                </span>
+                <span className="text-sm font-sans text-mist truncate">Cookie: {parsed.name}</span>
+              </div>
+            </div>
+
+            {/* Flag Badges Grid */}
+            <div className="flex flex-wrap gap-2">
+              <span className={`px-2.5 py-1 rounded text-xs border ${parsed.httpOnly ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border-rose-500/30 font-bold"}`}>
+                HttpOnly {parsed.httpOnly ? "✓" : "MISSING ⚠️"}
+              </span>
+              <span className={`px-2.5 py-1 rounded text-xs border ${parsed.secure ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border-rose-500/30 font-bold"}`}>
+                Secure {parsed.secure ? "✓" : "MISSING ⚠️"}
+              </span>
+              <span className={`px-2.5 py-1 rounded text-xs border ${parsed.sameSite !== "Missing" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30"}`}>
+                SameSite: {parsed.sameSite}
+              </span>
+            </div>
+          </div>
+
+          {/* Details Table */}
+          <div className="bg-void/60 border border-panelBorder/70 rounded-xl p-4 space-y-2 text-xs">
+            <div className="text-[10px] text-cyan-signal uppercase tracking-widest font-bold mb-2">Attributes Breakdown</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-mist">
+              <div>
+                <span className="text-[10px] text-mist/60 block">NAME</span>
+                <span className="text-white font-bold">{parsed.name}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-mist/60 block">PATH</span>
+                <span className="text-white font-bold">{parsed.path || "/ (Default)"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-mist/60 block">DOMAIN</span>
+                <span className="text-white font-bold">{parsed.domain || "Host-only"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-mist/60 block">MAX-AGE / EXPIRY</span>
+                <span className="text-white font-bold">{parsed.maxAge ? `${parsed.maxAge}s` : parsed.expires || "Session"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Issues List */}
+          {parsed.issues.length > 0 && (
+            <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1.5">
+              <div className="text-xs font-bold text-rose-400">Security Audit Warnings:</div>
+              {parsed.issues.map((iss, idx) => (
+                <div key={idx} className="text-xs text-rose-300/90 flex items-start gap-2">
+                  <span>⚠️</span>
+                  <span>{iss}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Hash Identifier & Rainbow Table Sub-component
+// ---------------------------------------------------------------------------
+
+const COMMON_HASHES: Record<string, { plain: string; type: string }> = {
+  // MD5
+  "5f4dcc3b5aa765d61d8327deb882cf99": { plain: "password", type: "MD5" },
+  "21232f297a57a5a743894a0e4a801fc3": { plain: "admin", type: "MD5" },
+  "e10adc3949ba59abbe56e057f20f883e": { plain: "123456", type: "MD5" },
+  "d8578edf8458ce06fbc5bb76a58c5ca4": { plain: "qwerty", type: "MD5" },
+  "63a9f0ea7bb98050796b649e85481845": { plain: "root", type: "MD5" },
+  "098f6bcd4621d373cade4e832627b4f6": { plain: "test", type: "MD5" },
+  "fcea920f7412b4da7be0cf6f11c62686": { plain: "guest", type: "MD5" },
+  // SHA1
+  "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8": { plain: "password", type: "SHA-1" },
+  "d033e22ae348aeb5660fc2140aec35850c4da997": { plain: "admin", type: "SHA-1" },
+  "7c4a8d09ca3762af61e59520943dc26494f8941b": { plain: "123456", type: "SHA-1" },
+  // SHA256
+  "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8": { plain: "password", type: "SHA-256" },
+  "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918": { plain: "admin", type: "SHA-256" },
+  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": { plain: "(empty string)", type: "SHA-256" },
+};
+
+function identifyHash(h: string): { likelyTypes: string[]; bits: number; charset: string } {
+  const clean = h.trim().toLowerCase();
+  const len = clean.length;
+  const isHex = /^[0-9a-f]+$/i.test(clean);
+
+  if (!isHex) {
+    if (clean.startsWith("$2a$") || clean.startsWith("$2b$") || clean.startsWith("$2y$")) {
+      return { likelyTypes: ["bcrypt"], bits: 184, charset: "Base64 (Crypt format)" };
+    }
+    if (clean.startsWith("$argon2")) {
+      return { likelyTypes: ["Argon2 (id/i/d)"], bits: 256, charset: "Argon2 format" };
+    }
+    return { likelyTypes: ["Unknown / Non-Hex encoding"], bits: len * 8, charset: "Custom" };
+  }
+
+  switch (len) {
+    case 32:
+      return { likelyTypes: ["MD5", "NTLM", "MD4", "MD2"], bits: 128, charset: "Hexadecimal" };
+    case 40:
+      return { likelyTypes: ["SHA-1", "RIPEMD-160", "MySQL 4.1+"], bits: 160, charset: "Hexadecimal" };
+    case 56:
+      return { likelyTypes: ["SHA-224", "SHA3-224"], bits: 224, charset: "Hexadecimal" };
+    case 64:
+      return { likelyTypes: ["SHA-256", "SHA3-256", "BLAKE2s", "HMAC-SHA256"], bits: 256, charset: "Hexadecimal" };
+    case 96:
+      return { likelyTypes: ["SHA-384", "SHA3-384"], bits: 384, charset: "Hexadecimal" };
+    case 128:
+      return { likelyTypes: ["SHA-512", "SHA3-512", "BLAKE2b", "Whirlpool"], bits: 512, charset: "Hexadecimal" };
+    default:
+      return { likelyTypes: ["Custom / Unknown Hash Length"], bits: len * 4, charset: "Hexadecimal" };
+  }
+}
+
+function HashLookup({ copyToClipboard, copiedKey }: { copyToClipboard: (text: string, key: string) => void; copiedKey: string | null }) {
+  const [hashInput, setHashInput] = useState("5f4dcc3b5aa765d61d8327deb882cf99");
+  const clean = hashInput.trim().toLowerCase();
+  const identity = identifyHash(clean);
+  const matched = COMMON_HASHES[clean];
+
+  return (
+    <div className="space-y-4 pt-2 font-mono">
+      <div>
+        <label className="text-[10px] text-mist uppercase tracking-widest font-bold block mb-1">
+          Input Hash (MD5, SHA-1, SHA-256, SHA-512, NTLM, bcrypt)
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            value={hashInput}
+            onChange={(e) => setHashInput(e.target.value)}
+            placeholder="Paste hash e.g. 5f4dcc3b5aa765d61d8327deb882cf99"
+            className="w-full px-4 py-3 bg-void border border-panelBorder rounded-xl text-white font-mono text-xs focus:outline-none focus:border-cyan-signal/60"
+          />
+        </div>
+      </div>
+
+      {clean && (
+        <div className="space-y-4 animate-slideUp">
+          {/* Identity & Match Banner */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Algorithm Recognition */}
+            <div className="p-4 bg-void/80 border border-panelBorder rounded-xl space-y-3">
+              <div className="text-[10px] text-cyan-signal uppercase tracking-widest font-bold">
+                Algorithm Identification
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {identity.likelyTypes.map((t, idx) => (
+                  <span key={idx} className="px-2.5 py-1 rounded bg-panel border border-panelBorder text-xs text-white font-bold">
+                    {t}
+                  </span>
+                ))}
+              </div>
+              <div className="text-xs text-mist pt-1 border-t border-panelBorder/40 flex justify-between">
+                <span>Bit Length: {identity.bits} bits</span>
+                <span>Charset: {identity.charset}</span>
+              </div>
+            </div>
+
+            {/* Rainbow Table Result */}
+            <div className={`p-4 rounded-xl border ${matched ? "bg-emerald-500/10 border-emerald-500/30" : "bg-void/80 border-panelBorder"}`}>
+              <div className="text-[10px] uppercase tracking-widest font-bold text-mist mb-1">
+                Rainbow Dictionary Lookup
+              </div>
+              {matched ? (
+                <div className="space-y-2">
+                  <div className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
+                    <span>✅</span> CRACKED / PLAINTEXT IDENTIFIED:
+                  </div>
+                  <div className="p-2.5 bg-void border border-emerald-500/40 rounded-lg text-sm font-bold text-white break-all flex items-center justify-between">
+                    <span>{matched.plain}</span>
+                    <button
+                      onClick={() => copyToClipboard(matched.plain, "cracked_hash")}
+                      className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition"
+                    >
+                      {copiedKey === "cracked_hash" ? "✓" : "COPY"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-mist/70 pt-1 space-y-1">
+                  <div>Not in local top-dictionary.</div>
+                  <div className="text-[11px] text-cyan-signal/80 pt-1">
+                    Tip: For complex salted hashes, verify via Hashcat or John The Ripper with wordlist rules.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

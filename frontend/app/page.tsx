@@ -20,6 +20,12 @@ import ScanHistory from "@/components/ScanHistory";
 import AsnIntelligence from "@/components/AsnIntelligence";
 import OsintAggregator from "@/components/OsintAggregator";
 import WafTester from "@/components/WafTester";
+import EmailSecurity from "@/components/EmailSecurity";
+import BucketFinder from "@/components/BucketFinder";
+import PhishingDetector from "@/components/PhishingDetector";
+import PortScanner from "@/components/PortScanner";
+import RobotsIntel from "@/components/RobotsIntel";
+import DorkGenerator from "@/components/DorkGenerator";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
 import { runScan, ScanResult } from "@/lib/api";
 
@@ -35,12 +41,18 @@ type Mode =
   | "cve"
   | "mail_header"
   | "pwned"
-  | "toolkit"
+  | "email"
+  | "buckets"
+  | "phishing"
+  | "ports"
+  | "crawl"
+  | "dorks"
   | "subdomains"
-  | "history"
+  | "waf"
   | "asn"
   | "osint"
-  | "waf";
+  | "toolkit"
+  | "history";
 
 const TABS: { key: Mode; icon: string; label: string; accent?: string }[] = [
   { key: "domain",      icon: "🛡️",  label: "Domain Recon"       },
@@ -54,12 +66,18 @@ const TABS: { key: Mode; icon: string; label: string; accent?: string }[] = [
   { key: "cve",         icon: "🔍",  label: "CVE Lookup"          },
   { key: "mail_header", icon: "📬",  label: "Mail Header"         },
   { key: "pwned",       icon: "⚡",  label: "Breach Leaks"        },
-  { key: "toolkit",     icon: "🛠️",  label: "Cyber Toolkit"       },
+  { key: "email",       icon: "📧",  label: "Email Security",     accent: "violet" },
+  { key: "buckets",     icon: "🪣",  label: "Cloud Buckets",      accent: "cyan" },
+  { key: "phishing",    icon: "🎣",  label: "Phishing Threat",    accent: "red" },
+  { key: "ports",       icon: "🔌",  label: "Port Scanner",       accent: "orange" },
+  { key: "crawl",       icon: "🤖",  label: "Robots & Sitemap",   accent: "emerald" },
+  { key: "dorks",       icon: "🎯",  label: "Dork Generator",     accent: "amber" },
   { key: "subdomains",  icon: "🕸️",  label: "Subdomains"          },
-  { key: "history",     icon: "📊",  label: "Scan History"        },
+  { key: "waf",         icon: "🛡️",  label: "WAF Tester",         accent: "red" },
   { key: "asn",         icon: "🌍",  label: "ASN / BGP"           },
-  { key: "osint",       icon: "📡",  label: "OSINT"               , accent: "purple" },
-  { key: "waf",         icon: "🛡️",  label: "WAF Tester"          , accent: "red" },
+  { key: "osint",       icon: "📡",  label: "OSINT",              accent: "purple" },
+  { key: "toolkit",     icon: "🛠️",  label: "Cyber Toolkit"       },
+  { key: "history",     icon: "📊",  label: "Scan History"        },
 ];
 
 export default function Home() {
@@ -307,45 +325,87 @@ export default function Home() {
         </div>
       )}
 
-      {/* 12. Cyber Security Toolkit */}
-      {activeMode === "toolkit" && (
+      {/* 12. Email Security Analyzer */}
+      {activeMode === "email" && (
         <div className="w-full flex justify-center animate-fadeIn">
-          <SecurityToolkit />
+          <EmailSecurity />
         </div>
       )}
 
-      {/* 13. Subdomain Enumerator */}
+      {/* 13. Cloud Bucket Finder */}
+      {activeMode === "buckets" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <BucketFinder />
+        </div>
+      )}
+
+      {/* 14. Phishing & Threat URL Checker */}
+      {activeMode === "phishing" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <PhishingDetector />
+        </div>
+      )}
+
+      {/* 15. Port Scanner */}
+      {activeMode === "ports" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <PortScanner />
+        </div>
+      )}
+
+      {/* 16. Robots & Sitemap Intelligence */}
+      {activeMode === "crawl" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <RobotsIntel />
+        </div>
+      )}
+
+      {/* 17. OSINT Dork Generator */}
+      {activeMode === "dorks" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <DorkGenerator />
+        </div>
+      )}
+
+      {/* 18. Subdomain Enumerator */}
       {activeMode === "subdomains" && (
         <div className="w-full flex justify-center animate-fadeIn">
           <SubdomainEnumerator />
         </div>
       )}
 
-      {/* 14. Scan History */}
-      {activeMode === "history" && (
+      {/* 19. WAF / Firewall Tester */}
+      {activeMode === "waf" && (
         <div className="w-full flex justify-center animate-fadeIn">
-          <ScanHistory />
+          <WafTester />
         </div>
       )}
 
-      {/* 15. ASN / BGP Intelligence */}
+      {/* 20. ASN / BGP Intelligence */}
       {activeMode === "asn" && (
         <div className="w-full flex justify-center animate-fadeIn">
           <AsnIntelligence />
         </div>
       )}
 
-      {/* 16. OSINT Aggregator */}
+      {/* 21. OSINT Aggregator */}
       {activeMode === "osint" && (
         <div className="w-full flex justify-center animate-fadeIn">
           <OsintAggregator />
         </div>
       )}
 
-      {/* 17. WAF / Firewall Tester */}
-      {activeMode === "waf" && (
+      {/* 22. Cyber Security Toolkit */}
+      {activeMode === "toolkit" && (
         <div className="w-full flex justify-center animate-fadeIn">
-          <WafTester />
+          <SecurityToolkit />
+        </div>
+      )}
+
+      {/* 23. Scan History */}
+      {activeMode === "history" && (
+        <div className="w-full flex justify-center animate-fadeIn">
+          <ScanHistory />
         </div>
       )}
 
@@ -365,11 +425,11 @@ export default function Home() {
           <span>Thunder Recon v3.5 Enterprise Engine • All Systems Operational</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>17 Security Modules</span>
+          <span>23 Enterprise Security Modules</span>
           <span>•</span>
           <span>15B+ Breach Records</span>
           <span>•</span>
-          <span>30+ AV Engines</span>
+          <span>30+ Threat Feeds</span>
         </div>
       </footer>
     </main>
