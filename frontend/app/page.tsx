@@ -204,6 +204,23 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <div className="relative flex flex-col items-center text-center mb-8 max-w-4xl w-full">
+        {/* ── Live Telemetry Ribbon ── */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-4 animate-fadeIn">
+          <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            29 CYBER ENGINES ONLINE
+          </span>
+          <span className="px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-[10px] font-bold flex items-center gap-1.5">
+            <span>🛡️</span> CISA KEV SYNCED
+          </span>
+          <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-[10px] font-bold flex items-center gap-1.5">
+            <span>⚡</span> 15.2B BREACH SIGNATURES
+          </span>
+          <span className="px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-400 font-mono text-[10px] font-bold flex items-center gap-1.5">
+            <span>🔒</span> SOC2 / ISO 27001 COMPLIANCE
+          </span>
+        </div>
+
         {/* Radar icon */}
         <div className="relative w-16 h-16 mb-4">
           <div className="absolute inset-0 rounded-full border border-panelBorder/60" />
@@ -223,32 +240,42 @@ export default function Home() {
           Thunder Recon
         </h1>
         <p className="text-mist mt-2 text-xs sm:text-sm leading-relaxed max-w-lg">
-          Enterprise Security Reconnaissance, Threat Intel &amp; Detonation Platform
+          Enterprise Security Reconnaissance, Attack Surface Management &amp; Threat Intelligence Platform
         </p>
 
-        {/* ── Category Filter Bar ── */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 mt-6 max-w-5xl">
-          {[
-            { id: "all", label: "🌟 All Modules", count: TABS.length },
-            { id: "command", label: "📑 Command & Compliance", count: TABS.filter(t => t.category === "command").length },
-            { id: "perimeter", label: "🛡️ Perimeter & DNS", count: TABS.filter(t => t.category === "perimeter").length },
-            { id: "threat", label: "🔬 Threat & Forensics", count: TABS.filter(t => t.category === "threat").length },
-            { id: "infra", label: "🔌 Infra & Cloud", count: TABS.filter(t => t.category === "infra").length },
-            { id: "toolkit", label: "🛠️ Toolkits", count: TABS.filter(t => t.category === "toolkit").length },
-          ].map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setTabCategory(cat.id as any)}
-              className={`text-xs px-3 py-1.5 rounded-xl border transition-all font-semibold cursor-pointer ${
-                tabCategory === cat.id
-                  ? "bg-void text-cyan-400 border-cyan-500/60 shadow-sm shadow-cyan-500/10"
-                  : "bg-panel/60 text-mist/80 border-panelBorder/70 hover:text-white"
-              }`}
-            >
-              <span>{cat.label}</span>
-              <span className="text-[10px] opacity-60 ml-1 font-mono">({cat.count})</span>
-            </button>
-          ))}
+        {/* ── Category Filter Bar with Embedded Search ── */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6 max-w-5xl">
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {[
+              { id: "all", label: "🌟 All", count: TABS.length },
+              { id: "command", label: "📑 Command & Compliance", count: TABS.filter(t => t.category === "command").length },
+              { id: "perimeter", label: "🛡️ Perimeter & DNS", count: TABS.filter(t => t.category === "perimeter").length },
+              { id: "threat", label: "🔬 Threat & Forensics", count: TABS.filter(t => t.category === "threat").length },
+              { id: "infra", label: "🔌 Infra & Cloud", count: TABS.filter(t => t.category === "infra").length },
+              { id: "toolkit", label: "🛠️ Toolkits", count: TABS.filter(t => t.category === "toolkit").length },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setTabCategory(cat.id as any)}
+                className={`text-xs px-3 py-1.5 rounded-xl border transition-all font-semibold cursor-pointer ${
+                  tabCategory === cat.id
+                    ? "bg-void text-cyan-400 border-cyan-500/60 shadow-sm shadow-cyan-500/10"
+                    : "bg-panel/60 text-mist/80 border-panelBorder/70 hover:text-white"
+                }`}
+              >
+                <span>{cat.label}</span>
+                <span className="text-[10px] opacity-60 ml-1 font-mono">({cat.count})</span>
+              </button>
+            ))}
+          </div>
+
+          <input
+            type="text"
+            placeholder="Quick find module..."
+            value={tabSearch}
+            onChange={(e) => setTabSearch(e.target.value)}
+            className="bg-void/80 border border-panelBorder rounded-xl px-3 py-1.5 text-xs text-white placeholder-mist/40 outline-none w-44 font-mono focus:border-cyan-signal/60 transition"
+          />
         </div>
 
         {/* ── Mode Tabs ── */}
@@ -295,7 +322,7 @@ export default function Home() {
 
       {/* 1. Domain Recon */}
       {activeMode === "domain" && (
-        <div className="w-full flex flex-col items-center animate-fadeIn">
+        <div className="w-full flex flex-col items-center animate-fadeIn space-y-6">
           <ScanForm
             onScan={handleScan}
             loading={loading}
@@ -304,12 +331,12 @@ export default function Home() {
             onRequestAuth={handleRequestAuth}
           />
           {error && (
-            <div className="mt-6 flex items-center gap-2 text-crimson-risk text-sm border border-crimson-risk/30 bg-crimson-risk/10 rounded-xl px-4 py-3 font-mono max-w-2xl w-full">
+            <div className="flex items-center gap-2 text-crimson-risk text-sm border border-crimson-risk/30 bg-crimson-risk/10 rounded-xl px-4 py-3 font-mono max-w-2xl w-full">
               <span>⚠</span> {error}
             </div>
           )}
           {loading && (
-            <div className="mt-10 flex flex-col items-center gap-3">
+            <div className="my-10 flex flex-col items-center gap-3">
               <div className="flex gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan-signal animate-ping"
@@ -322,8 +349,48 @@ export default function Home() {
             </div>
           )}
           {result && (
-            <div className="mt-10 w-full flex justify-center">
+            <div className="w-full flex justify-center">
               <ResultsDashboard result={result} />
+            </div>
+          )}
+
+          {/* Featured Intelligence Engines Showcase (when idle) */}
+          {!result && !loading && (
+            <div className="w-full max-w-5xl mt-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">⚡</span>
+                  <span className="text-xs font-bold uppercase tracking-wider font-mono text-white">
+                    Featured Next-Gen Cyber Engines
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-mist">Click any module to launch</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { mode: "report", icon: "📑", title: "Executive Audit & CISO Report", desc: "SOC2 / ISO 27001 / NIST CSF compliance matrix + PDF export.", accent: "border-violet-500/30 bg-violet-500/5 hover:border-violet-500/60" },
+                  { mode: "diff", icon: "⚖️", title: "Attack Surface Diff", desc: "Compare Staging vs Production perimeter drift & port regressions.", accent: "border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/60" },
+                  { mode: "mitre", icon: "🗺️", title: "MITRE ATT&CK Matrix", desc: "Map perimeter vulnerabilities to adversary TTPs & D3FEND controls.", accent: "border-red-500/30 bg-red-500/5 hover:border-red-500/60" },
+                  { mode: "threat_feed", icon: "📡", title: "CISA KEV Live Stream", desc: "Real-time catalog of weaponized zero-days and ransomware threats.", accent: "border-red-500/30 bg-red-500/5 hover:border-red-500/60" },
+                  { mode: "email", icon: "📧", title: "Email Security & DMARC", desc: "Audit SPF lookup count, DKIM selectors & spoofing grade.", accent: "border-violet-500/30 bg-violet-500/5 hover:border-violet-500/60" },
+                  { mode: "buckets", icon: "🪣", title: "Cloud Bucket Hunter", desc: "Search exposed AWS S3, Google Cloud, Azure Blob & DO Spaces.", accent: "border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/60" },
+                  { mode: "ports", icon: "🔌", title: "TCP Port Scanner", desc: "Scan Top 17, Web, Database & SSH ports with banner grabbing.", accent: "border-orange-500/30 bg-orange-500/5 hover:border-orange-500/60" },
+                  { mode: "dns_prop", icon: "🌐", title: "Global DNS Propagation", desc: "Audit DNS sync consistency across 12 worldwide tier-1 resolvers.", accent: "border-blue-500/30 bg-blue-500/5 hover:border-blue-500/60" },
+                ].map((item) => (
+                  <div
+                    key={item.mode}
+                    onClick={() => { setActiveMode(item.mode as any); setResult(null); setError(null); }}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-1.5 backdrop-blur-sm ${item.accent}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{item.icon}</span>
+                      <span className="text-xs font-bold text-white leading-tight">{item.title}</span>
+                    </div>
+                    <p className="text-[11px] text-mist/80 leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
