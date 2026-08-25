@@ -1,152 +1,40 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+const RealWorldThreatMap = dynamic(() => import("./RealWorldThreatMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[460px] bg-[#030712] rounded-2xl border border-white/10 flex items-center justify-center text-xs font-mono text-cyan-400">
+      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping mr-2.5"></span>
+      Initializing High-Resolution Geographic CartoDB Stream...
+    </div>
+  ),
+});
 
 interface CommandDashboardProps {
   onSelectMode: (mode: string) => void;
   onQuickScan: (domain: string) => void;
 }
 
-interface CountryNode {
-  id: string;
-  name: string;
-  code: string;
-  flag: string;
-  x: number; // Percentage 0-100 on 1000x500 viewBox
-  y: number;
-  color: string;
-  region: "americas" | "europe" | "apac" | "mea";
-  traffic: string;
-  status: string;
-}
-
-interface LiveArc {
-  id: string;
-  src: CountryNode;
-  tgt: CountryNode;
-  progress: number;
-  speed: number;
-  color: string;
-  type: string;
-  bw: string;
-}
-
-// 22 Accurately Positioned Real-World Countries on 1000x500 Equirectangular Map
-const REAL_COUNTRIES: CountryNode[] = [
-  // Americas
-  { id: "usa", name: "United States", code: "USA", flag: "🇺🇸", x: 230, y: 175, color: "#38BDF8", region: "americas", traffic: "184 Gbps", status: "Shield Active" },
-  { id: "can", name: "Canada", code: "CAN", flag: "🇨🇦", x: 215, y: 110, color: "#38BDF8", region: "americas", traffic: "42 Gbps", status: "Guarded" },
-  { id: "bra", name: "Brazil", code: "BRA", flag: "🇧🇷", x: 360, y: 345, color: "#F43F5E", region: "americas", traffic: "96 Gbps", status: "Attack Origin" },
-  { id: "mex", name: "Mexico", code: "MEX", flag: "🇲🇽", x: 210, y: 225, color: "#FBBF24", region: "americas", traffic: "31 Gbps", status: "Monitored" },
-  { id: "arg", name: "Argentina", code: "ARG", flag: "🇦🇷", x: 335, y: 420, color: "#38BDF8", region: "americas", traffic: "18 Gbps", status: "Stable" },
-
-  // Europe
-  { id: "gbr", name: "United Kingdom", code: "GBR", flag: "🇬🇧", x: 485, y: 135, color: "#00F5D4", region: "europe", traffic: "128 Gbps", status: "SOC Defense" },
-  { id: "deu", name: "Germany", code: "DEU", flag: "🇩🇪", x: 525, y: 140, color: "#00F5D4", region: "europe", traffic: "115 Gbps", status: "Scrubbing Center" },
-  { id: "fra", name: "France", code: "FRA", flag: "🇫🇷", x: 500, y: 155, color: "#00F5D4", region: "europe", traffic: "89 Gbps", status: "Guarded" },
-  { id: "nld", name: "Netherlands", code: "NLD", flag: "🇳🇱", x: 512, y: 132, color: "#00F5D4", region: "europe", traffic: "140 Gbps", status: "IXP Hub Shielded" },
-  { id: "ukr", name: "Ukraine", code: "UKR", flag: "🇺🇦", x: 585, y: 145, color: "#FFB703", region: "europe", traffic: "94 Gbps", status: "Critical Target" },
-  { id: "rus", name: "Russia", code: "RUS", flag: "🇷🇺", x: 690, y: 110, color: "#F43F5E", region: "europe", traffic: "210 Gbps", status: "High Threat Swarm" },
-
-  // Asia-Pacific
-  { id: "chn", name: "China", code: "CHN", flag: "🇨🇳", x: 775, y: 195, color: "#F43F5E", region: "apac", traffic: "260 Gbps", status: "C2 Swarm Detected" },
-  { id: "ind", name: "India", code: "IND", flag: "🇮🇳", x: 705, y: 245, color: "#FFB703", region: "apac", traffic: "145 Gbps", status: "DDoS Mitigation" },
-  { id: "jpn", name: "Japan", code: "JPN", flag: "🇯🇵", x: 875, y: 180, color: "#38BDF8", region: "apac", traffic: "88 Gbps", status: "Hardened" },
-  { id: "kor", name: "South Korea", code: "KOR", flag: "🇰🇷", x: 840, y: 185, color: "#38BDF8", region: "apac", traffic: "74 Gbps", status: "Target Defended" },
-  { id: "sgp", name: "Singapore", code: "SGP", flag: "🇸🇬", x: 780, y: 310, color: "#00F5D4", region: "apac", traffic: "112 Gbps", status: "Secure Gateway" },
-  { id: "aus", name: "Australia", code: "AUS", flag: "🇦🇺", x: 870, y: 395, color: "#38BDF8", region: "apac", traffic: "65 Gbps", status: "Protected" },
-
-  // Middle East & Africa
-  { id: "are", name: "UAE", code: "ARE", flag: "🇦🇪", x: 645, y: 235, color: "#00F5D4", region: "mea", traffic: "58 Gbps", status: "Cloud Flare Active" },
-  { id: "zaf", name: "South Africa", code: "ZAF", flag: "🇿🇦", x: 555, y: 410, color: "#F43F5E", region: "mea", traffic: "44 Gbps", status: "Botnet Surge" },
-  { id: "sau", name: "Saudi Arabia", code: "SAU", flag: "🇸🇦", x: 620, y: 230, color: "#FBBF24", region: "mea", traffic: "39 Gbps", status: "Monitored" },
-  { id: "egy", name: "Egypt", code: "EGY", flag: "🇪🇬", x: 575, y: 215, color: "#00F5D4", region: "mea", traffic: "28 Gbps", status: "Stable" },
-  { id: "nga", name: "Nigeria", code: "NGA", flag: "🇳🇬", x: 505, y: 285, color: "#F43F5E", region: "mea", traffic: "33 Gbps", status: "Phishing Hub" },
-];
-
-const ATTACK_VECTORS = [
-  { name: "Volumetric UDP/DNS Amp", color: "#F43F5E", minBw: 80, maxBw: 185 },
-  { name: "Mirai C2 IoT Swarm", color: "#FFB703", minBw: 30, maxBw: 75 },
-  { name: "HTTP/2 Rapid Reset Exploit", color: "#00F5D4", minBw: 45, maxBw: 110 },
-  { name: "SYN Flood Exfiltration", color: "#A855F7", minBw: 20, maxBw: 55 },
-  { name: "BGP Route Hijack Attempt", color: "#38BDF8", minBw: 60, maxBw: 130 },
-];
-
 export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandDashboardProps) {
   const [quickDomain, setQuickDomain] = useState("");
   const [activeCategory, setActiveCategory] = useState<"all" | "recon" | "threat" | "ops">("all");
-  const [selectedRegion, setSelectedRegion] = useState<"all" | "americas" | "europe" | "apac" | "mea">("all");
-  const [selectedCountry, setSelectedCountry] = useState<CountryNode | null>(null);
-  const [activeArcs, setActiveArcs] = useState<LiveArc[]>([]);
   const [ddosBandwidth, setDdosBandwidth] = useState(524);
   const [packetRate, setPacketRate] = useState(342);
   const [activeBotCount, setActiveBotCount] = useState(412800);
-  const [recentVectors, setRecentVectors] = useState<Array<{ id: number; text: string; color: string }>>([
-    { id: 1, text: "🇨🇳 China ➔ 🇺🇸 United States • UDP Amp (142 Gbps)", color: "#F43F5E" },
-    { id: 2, text: "🇷🇺 Russia ➔ 🇺🇦 Ukraine • Mirai C2 Swarm (68 Gbps)", color: "#FFB703" },
-    { id: 3, text: "🇧🇷 Brazil ➔ 🇬🇧 United Kingdom • HTTP/2 Reset", color: "#00F5D4" },
-  ]);
 
-  // Periodic Telemetry Pulse & Live Arcs Generator
+  // Periodic Telemetry Pulse
   useEffect(() => {
     const timer = setInterval(() => {
       setDdosBandwidth(Math.floor(480 + Math.random() * 110));
       setPacketRate(Math.floor(310 + Math.random() * 70));
       setActiveBotCount((prev) => prev + Math.floor((Math.random() - 0.47) * 150));
-
-      const sIdx = Math.floor(Math.random() * REAL_COUNTRIES.length);
-      let tIdx = Math.floor(Math.random() * REAL_COUNTRIES.length);
-      while (tIdx === sIdx) tIdx = Math.floor(Math.random() * REAL_COUNTRIES.length);
-
-      const src = REAL_COUNTRIES[sIdx];
-      const tgt = REAL_COUNTRIES[tIdx];
-      const type = ATTACK_VECTORS[Math.floor(Math.random() * ATTACK_VECTORS.length)];
-      const bw = `${Math.floor(type.minBw + Math.random() * (type.maxBw - type.minBw))} Gbps`;
-
-      const newArc: LiveArc = {
-        id: Math.random().toString(36).substring(7),
-        src,
-        tgt,
-        progress: 0,
-        speed: 0.016 + Math.random() * 0.012,
-        color: type.color,
-        type: type.name,
-        bw,
-      };
-
-      setActiveArcs((prev) => [...prev.slice(-7), newArc]);
-
-      setRecentVectors((prev) => [
-        {
-          id: Date.now() + Math.random(),
-          text: `${src.flag} ${src.name} ➔ ${tgt.flag} ${tgt.name} • ${type.name} (${bw})`,
-          color: type.color,
-        },
-        ...prev.slice(0, 2),
-      ]);
-    }, 2200);
+    }, 2500);
 
     return () => clearInterval(timer);
   }, []);
-
-  // Animation Loop for Trajectory Progress
-  useEffect(() => {
-    let animId: number;
-    const updateArcs = () => {
-      setActiveArcs((prev) =>
-        prev
-          .map((arc) => ({ ...arc, progress: arc.progress + arc.speed }))
-          .filter((arc) => arc.progress < 1.05)
-      );
-      animId = requestAnimationFrame(updateArcs);
-    };
-    animId = requestAnimationFrame(updateArcs);
-    return () => cancelAnimationFrame(animId);
-  }, []);
-
-  const filteredCountries = selectedRegion === "all"
-    ? REAL_COUNTRIES
-    : REAL_COUNTRIES.filter((c) => c.region === selectedRegion);
 
   const SECTORS = [
     { name: "Financial & Banking", percent: 34, attacks: "1.4M / hr", color: "bg-rose-500" },
@@ -380,11 +268,11 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
         </form>
       </div>
 
-      {/* ── 2. Real-World Global Cyber Threat & Attack Map ── */}
+      {/* ── 2. Real-World Geographic Global Cyber Threat & Attack Map ── */}
       <div className="cyber-card rounded-3xl p-6 sm:p-8 border border-white/10 relative overflow-hidden shadow-2xl space-y-6">
         
-        {/* Header Strip & Region Selectors */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+        {/* Header Strip */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-3.5 h-3.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_12px_#F43F5E]" />
             <div>
@@ -392,323 +280,25 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
                 Live Cyber Threat &amp; Attack Telemetry
               </h2>
               <p className="text-xs text-slate-400">
-                Real-world high-definition global vector map with named sovereign nodes and ballistic trajectory tracking
+                Real-world interactive geographic map with named sovereign nodes, live satellite layers, and ballistic trajectory tracking
               </p>
             </div>
           </div>
 
-          {/* Region Filter Buttons */}
-          <div className="flex items-center gap-1.5 bg-white/[0.04] p-1 rounded-xl border border-white/10 self-stretch md:self-auto overflow-x-auto">
-            {(["all", "americas", "europe", "apac", "mea"] as const).map((reg) => {
-              const labels = { all: "Global", americas: "Americas", europe: "Europe", apac: "Asia-Pacific", mea: "Middle East & Africa" };
-              return (
-                <button
-                  key={reg}
-                  onClick={() => setSelectedRegion(reg)}
-                  className={`px-3 py-1 text-xs rounded-lg font-medium whitespace-nowrap transition-all ${
-                    selectedRegion === reg
-                      ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {labels[reg]}
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-4 text-xs font-mono text-slate-300">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">DDoS Stream:</span>
+              <strong className="text-rose-400">{ddosBandwidth} Gbps</strong>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">Packet Rate:</span>
+              <strong className="text-cyan-300">{packetRate} Mpps</strong>
+            </div>
           </div>
         </div>
 
-        {/* Real World Geographic Vector SVG Map Container */}
-        <div className="w-full relative rounded-2xl bg-[#030712] border border-white/10 overflow-hidden shadow-inner aspect-[2/1] min-h-[380px] max-h-[520px]">
-          
-          {/* SVG Real World Map */}
-          <svg
-            viewBox="0 0 1000 500"
-            className="w-full h-full block select-none"
-            style={{ filter: "drop-shadow(0 0 20px rgba(0,245,212,0.05))" }}
-          >
-            <defs>
-              {/* Gradients */}
-              <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#0B1528" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#030712" stopOpacity="1" />
-              </radialGradient>
-              <linearGradient id="landGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#0F1F38" />
-                <stop offset="100%" stopColor="#081426" />
-              </linearGradient>
-              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-            </defs>
-
-            {/* Ocean Background */}
-            <rect width="1000" height="500" fill="url(#oceanGlow)" />
-
-            {/* Tactical Coordinate Grid (Latitude & Longitude) */}
-            <g stroke="rgba(255,255,255,0.04)" strokeWidth="1">
-              {[100, 200, 300, 400, 500, 600, 700, 800, 900].map((x) => (
-                <line key={`x-${x}`} x1={x} y1="0" x2={x} y2="500" />
-              ))}
-              {[75, 150, 225, 300, 375, 450].map((y) => (
-                <line key={`y-${y}`} x1="0" y1={y} x2="1000" y2={y} />
-              ))}
-              {/* Equator & Prime Meridian */}
-              <line x1="0" y1="250" x2="1000" y2="250" stroke="rgba(0,245,212,0.15)" strokeDasharray="4 4" />
-              <line x1="500" y1="0" x2="500" y2="500" stroke="rgba(0,245,212,0.15)" strokeDasharray="4 4" />
-            </g>
-
-            {/* High-Fidelity Vector World Continents & Landmasses */}
-            <g fill="url(#landGradient)" stroke="rgba(0, 245, 212, 0.28)" strokeWidth="1.2" strokeLinejoin="round">
-              {/* North America (Canada, USA, Alaska, Mexico, Central America) */}
-              <path d="M 120 70 Q 140 50 170 55 Q 210 40 260 55 Q 310 65 315 90 Q 295 100 270 120 Q 285 135 295 160 Q 275 190 260 210 Q 235 210 220 230 Q 200 260 175 240 Q 160 215 145 170 Q 115 140 100 100 Z" />
-              {/* Greenland */}
-              <path d="M 330 35 Q 370 25 390 45 Q 380 85 345 80 Q 320 65 330 35 Z" />
-              {/* Caribbean Islands */}
-              <path d="M 270 230 Q 290 225 300 240 Q 280 250 270 230 Z" />
-              
-              {/* South America (Colombia, Brazil, Peru, Chile, Argentina) */}
-              <path d="M 275 255 Q 315 250 355 270 Q 400 310 390 360 Q 360 410 330 460 Q 310 465 310 430 Q 300 370 280 320 Q 265 285 275 255 Z" />
-
-              {/* Europe (UK & Ireland) */}
-              <path d="M 470 115 Q 490 110 495 130 Q 485 150 465 145 Z" />
-              {/* Europe Main (Scandinavia, Western & Central Europe, Mediterranean) */}
-              <path d="M 500 80 Q 535 60 555 80 Q 545 110 520 125 Q 550 135 565 155 Q 540 185 500 185 Q 480 170 490 145 Q 485 120 500 80 Z" />
-              
-              {/* Eurasia / Russia & North Asia */}
-              <path d="M 565 75 Q 630 50 720 50 Q 820 60 880 90 Q 860 120 800 130 Q 750 120 680 125 Q 610 110 565 75 Z" />
-
-              {/* East Asia & China */}
-              <path d="M 700 135 Q 780 135 830 160 Q 835 210 785 235 Q 730 225 710 180 Z" />
-
-              {/* Japan */}
-              <path d="M 865 150 Q 885 160 880 195 Q 860 190 865 150 Z" />
-
-              {/* South Asia & India */}
-              <path d="M 680 200 Q 735 205 735 240 Q 715 280 690 280 Q 670 240 680 200 Z" />
-
-              {/* Southeast Asia */}
-              <path d="M 750 240 Q 795 245 800 280 Q 770 300 750 270 Z" />
-              {/* Indonesia / Philippines archipelago */}
-              <path d="M 770 320 Q 820 315 840 335 Q 800 350 770 320 Z" />
-
-              {/* Middle East & Arabian Peninsula */}
-              <path d="M 600 190 Q 650 195 655 240 Q 625 260 595 230 Z" />
-
-              {/* Africa */}
-              <path d="M 480 200 Q 575 190 595 240 Q 610 300 575 365 Q 545 425 515 420 Q 465 350 460 280 Q 460 230 480 200 Z" />
-              {/* Madagascar */}
-              <path d="M 610 360 Q 625 365 620 405 Q 605 400 610 360 Z" />
-
-              {/* Australia & New Zealand */}
-              <path d="M 810 360 Q 880 340 920 375 Q 910 435 840 435 Q 800 405 810 360 Z" />
-              <path d="M 940 420 Q 960 415 955 450 Q 935 445 940 420 Z" />
-            </g>
-
-            {/* Dotted Geo Matrix Overlay for Modern Threat-Map Texture */}
-            <g fill="rgba(0, 245, 212, 0.22)">
-              {/* North America dots */}
-              {[
-                [180,110],[210,95],[240,110],[190,140],[225,145],[260,150],[190,180],[225,185],[255,190],[210,220]
-              ].map(([dx, dy], i) => (
-                <circle key={`na-${i}`} cx={dx} cy={dy} r="1.4" />
-              ))}
-              {/* South America dots */}
-              {[
-                [310,280],[340,295],[320,330],[355,340],[330,380],[320,420]
-              ].map(([dx, dy], i) => (
-                <circle key={`sa-${i}`} cx={dx} cy={dy} r="1.4" />
-              ))}
-              {/* Europe dots */}
-              {[
-                [480,125],[510,115],[535,110],[500,145],[525,145],[550,140],[520,165],[555,165]
-              ].map(([dx, dy], i) => (
-                <circle key={`eu-${i}`} cx={dx} cy={dy} r="1.4" />
-              ))}
-              {/* Asia & Russia dots */}
-              {[
-                [610,95],[660,90],[715,90],[770,95],[825,100],[680,150],[730,155],[780,160],[830,165],[700,220],[750,210],[795,215]
-              ].map(([dx, dy], i) => (
-                <circle key={`as-${i}`} cx={dx} cy={dy} r="1.4" />
-              ))}
-              {/* Africa dots */}
-              {[
-                [510,230],[550,230],[500,270],[540,280],[575,280],[520,330],[555,340],[535,390]
-              ].map(([dx, dy], i) => (
-                <circle key={`af-${i}`} cx={dx} cy={dy} r="1.4" />
-              ))}
-              {/* Australia dots */}
-              {[
-                [840,380],[875,375],[850,405],[885,405]
-              ].map(([dx, dy], i) => (
-                <circle key={`oc-${i}`} cx={dx} cy={dy} r="1.4" />
-              ))}
-            </g>
-
-            {/* Dynamic Ballistic Attack Trajectory Arcs */}
-            <g>
-              {activeArcs.map((arc) => {
-                const sx = arc.src.x;
-                const sy = arc.src.y;
-                const tx = arc.tgt.x;
-                const ty = arc.tgt.y;
-                const mx = (sx + tx) / 2;
-                const my = Math.min(sy, ty) - 55;
-
-                // Current head position along quadratic Bezier curve
-                const t = Math.min(1, arc.progress);
-                const cx = (1 - t) * (1 - t) * sx + 2 * (1 - t) * t * mx + t * t * tx;
-                const cy = (1 - t) * (1 - t) * sy + 2 * (1 - t) * t * my + t * t * ty;
-
-                const pathD = `M ${sx} ${sy} Q ${mx} ${my} ${tx} ${ty}`;
-
-                return (
-                  <g key={arc.id}>
-                    {/* Glowing Trajectory Arc */}
-                    <path
-                      d={pathD}
-                      fill="none"
-                      stroke={arc.color}
-                      strokeWidth="1.5"
-                      strokeOpacity="0.45"
-                      strokeDasharray="4 3"
-                    />
-                    {/* Animated Leading Laser Missile Head */}
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r="3.5"
-                      fill={arc.color}
-                      filter="url(#glow)"
-                      className="animate-pulse"
-                    />
-                    {/* Particle Glow Core */}
-                    <circle cx={cx} cy={cy} r="1.8" fill="#FFFFFF" />
-                  </g>
-                );
-              })}
-            </g>
-
-            {/* Real Named Sovereign Country Beacons & Labels */}
-            <g>
-              {filteredCountries.map((c) => {
-                const isSelected = selectedCountry?.id === c.id;
-                return (
-                  <g
-                    key={c.id}
-                    className="cursor-pointer group"
-                    onClick={() => setSelectedCountry(c)}
-                  >
-                    {/* Radar wave pulse ring */}
-                    <circle
-                      cx={c.x}
-                      cy={c.y}
-                      r="8"
-                      fill="none"
-                      stroke={c.color}
-                      strokeWidth="1"
-                      strokeOpacity="0.4"
-                      className="animate-ping"
-                      style={{ transformOrigin: `${c.x}px ${c.y}px`, animationDuration: "3s" }}
-                    />
-
-                    {/* Outer hover halo */}
-                    <circle
-                      cx={c.x}
-                      cy={c.y}
-                      r={isSelected ? 6.5 : 4.5}
-                      fill={c.color}
-                      fillOpacity={isSelected ? "0.4" : "0.2"}
-                      stroke={c.color}
-                      strokeWidth="1.2"
-                    />
-
-                    {/* Inner core dot */}
-                    <circle cx={c.x} cy={c.y} r="2.5" fill="#FFFFFF" />
-
-                    {/* Country Name Tag with Flag */}
-                    <g transform={`translate(${c.x + 8}, ${c.y + 3})`}>
-                      {/* Dark badge backdrop */}
-                      <rect
-                        x="-2"
-                        y="-10"
-                        width={c.name.length * 5.8 + 22}
-                        height="14"
-                        rx="4"
-                        fill="#060C18"
-                        fillOpacity="0.85"
-                        stroke={isSelected ? c.color : "rgba(255,255,255,0.15)"}
-                        strokeWidth="0.8"
-                      />
-                      <text
-                        x="2"
-                        y="0"
-                        fill={isSelected ? "#00F5D4" : "#F1F5F9"}
-                        fontSize="8.5"
-                        fontWeight="600"
-                        fontFamily="'Plus Jakarta Sans', system-ui, sans-serif"
-                      >
-                        {c.flag} {c.name}
-                      </text>
-                    </g>
-                  </g>
-                );
-              })}
-            </g>
-          </svg>
-
-          {/* Active Intercept Feed Overlay (Top Right) */}
-          <div className="absolute top-3 right-3 max-w-xs hidden sm:block bg-[#050B17]/90 backdrop-blur-md p-3 rounded-xl border border-white/10 text-[10px] font-mono space-y-1.5 shadow-xl">
-            <div className="text-slate-400 font-bold tracking-wider text-[9px] uppercase border-b border-white/10 pb-1.5 flex items-center justify-between">
-              <span>LIVE BALLISTIC STREAM</span>
-              <span className="text-rose-400 animate-pulse font-semibold">● ACTIVE</span>
-            </div>
-            {recentVectors.slice(0, 3).map((vec) => (
-              <div key={vec.id} className="text-slate-300 truncate" style={{ borderLeft: `2px solid ${vec.color}`, paddingLeft: "6px" }}>
-                {vec.text}
-              </div>
-            ))}
-          </div>
-
-          {/* Selected Country Tactical Inspector Modal (Bottom Left) */}
-          {selectedCountry && (
-            <div className="absolute bottom-3 left-3 bg-[#060D1D]/95 backdrop-blur-md px-4 py-2.5 rounded-xl border border-cyan-400/30 text-xs font-mono flex items-center gap-4 shadow-2xl animate-fadeIn">
-              <div>
-                <span className="text-white font-bold flex items-center gap-1.5">
-                  <span className="text-base">{selectedCountry.flag}</span>
-                  <span>{selectedCountry.name} ({selectedCountry.code})</span>
-                </span>
-                <div className="text-[10px] text-slate-400 mt-0.5">
-                  Status: <strong className="text-cyan-300">{selectedCountry.status}</strong> • Flow: <strong className="text-rose-400">{selectedCountry.traffic}</strong>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedCountry(null)}
-                className="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/10"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          {/* Bottom Map Legend */}
-          <div className="absolute bottom-3 right-3 hidden md:flex items-center gap-3 bg-[#050B17]/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-mono text-slate-300">
-            <span className="flex items-center gap-1 text-rose-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> UDP/DDoS
-            </span>
-            <span className="flex items-center gap-1 text-amber-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Mirai Botnet
-            </span>
-            <span className="flex items-center gap-1 text-cyan-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" /> HTTP/2 Reset
-            </span>
-            <span className="flex items-center gap-1 text-purple-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> SYN Flood
-            </span>
-          </div>
-
-        </div>
+        {/* Real-World Leaflet Map Component */}
+        <RealWorldThreatMap />
 
         {/* ── 3. Detail Grids: Botnets, Sectors & Countries ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-white/10">
