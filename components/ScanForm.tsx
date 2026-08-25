@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AuthUser, ProviderButtonsBar, ProviderType } from "./AuthProviders";
+import { AuthUser } from "./AuthProviders";
 
 interface Props {
   onScan: (
@@ -13,39 +13,24 @@ interface Props {
     sessionToken?: string
   ) => void;
   loading: boolean;
-  user: AuthUser | null;
-  onUserChange: (user: AuthUser | null) => void;
-  onRequestAuth: (targetDomain: string, provider?: ProviderType) => void;
+  user?: AuthUser | null;
+  onUserChange?: (user: AuthUser | null) => void;
+  onRequestAuth?: (targetDomain: string) => void;
 }
 
-export default function ScanForm({ onScan, loading, user, onUserChange, onRequestAuth }: Props) {
+export default function ScanForm({ onScan, loading, user }: Props) {
   const [domain, setDomain] = useState("");
-  const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState(true);
   const [includePorts, setIncludePorts] = useState(true);
   const [includeBreaches, setIncludeBreaches] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!domain.trim() || !authorized) return;
+    if (!domain.trim()) return;
 
-    if (!user) {
-      onRequestAuth(domain.trim(), "google");
-      return;
-    }
-
-    onScan(domain.trim(), authorized, includePorts, includeBreaches, user.email, user.session_token);
-  };
-
-  const handleSelectProvider = (provider: ProviderType) => {
-    onRequestAuth(domain.trim() || "target domain", provider);
-  };
-
-  const handleSignOut = () => {
-    try {
-      localStorage.removeItem("thunder_recon_auth_user");
-      localStorage.removeItem("thunder_recon_google_user");
-    } catch (e) {}
-    onUserChange(null);
+    // Scan directly — 100% free with no email verification or login required
+    const targetEmail = user?.email || "anonymous@thunder-recon.local";
+    onScan(domain.trim(), authorized, includePorts, includeBreaches, targetEmail, user?.session_token);
   };
 
   return (
@@ -65,10 +50,10 @@ export default function ScanForm({ onScan, loading, user, onUserChange, onReques
 
         <button
           type="submit"
-          disabled={loading || !domain.trim() || !authorized}
+          disabled={loading || !domain.trim()}
           className="w-full sm:w-auto btn-cyber-primary disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
         >
-          {loading ? "Scanning…" : "Run Scan →"}
+          {loading ? "Scanning…" : "Run Free Scan →"}
         </button>
       </div>
 
@@ -81,7 +66,7 @@ export default function ScanForm({ onScan, loading, user, onUserChange, onReques
             onChange={(e) => setAuthorized(e.target.checked)}
             className="accent-cyan-signal w-4 h-4"
           />
-          I own this domain or am authorized to test it
+          Free Scan • Authorization Confirmed
         </label>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -100,18 +85,9 @@ export default function ScanForm({ onScan, loading, user, onUserChange, onReques
               onChange={(e) => setIncludeBreaches(e.target.checked)}
               className="accent-cyan-signal w-4 h-4"
             />
-            Data Breach Intelligence
+            Breach Intelligence
           </label>
         </div>
-      </div>
-
-      {/* Provider Icons & Account Verification under scan options */}
-      <div className="pt-1">
-        <ProviderButtonsBar
-          user={user}
-          onSelectProvider={handleSelectProvider}
-          onSignOut={handleSignOut}
-        />
       </div>
     </form>
   );

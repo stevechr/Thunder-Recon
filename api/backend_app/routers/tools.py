@@ -99,19 +99,6 @@ def enumerate_subdomains(
             detail="You must confirm you own or are authorized to enumerate this domain (authorized=true).",
         )
 
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-    elif req.session_token:
-        token = req.session_token
-
-    is_valid, _ = verify_session_token(token)
-    if not is_valid:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required for subdomain enumeration.",
-        )
-
     domain = req.domain.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")
     return subdomain_service.enumerate_subdomains(domain)
 
@@ -146,19 +133,6 @@ def run_osint(
     req: OsintRequest,
     authorization: str | None = Header(default=None),
 ):
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-    elif req.session_token:
-        token = req.session_token
-
-    is_valid, _ = verify_session_token(token)
-    if not is_valid:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required for OSINT aggregation.",
-        )
-
     domain = req.domain.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")
     return osint_service.run_osint(domain, req.email)
 
@@ -177,19 +151,6 @@ def waf_test(
         raise HTTPException(
             status_code=403,
             detail="You must confirm you own or are authorized to probe this domain (authorized=true).",
-        )
-
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-    elif req.session_token:
-        token = req.session_token
-
-    is_valid, _ = verify_session_token(token)
-    if not is_valid:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required for WAF testing.",
         )
 
     domain = req.domain.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")
@@ -233,19 +194,6 @@ def find_cloud_buckets(
         raise HTTPException(
             status_code=403,
             detail="You must confirm you are authorized to search for buckets related to this target.",
-        )
-
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-    elif req.session_token:
-        token = req.session_token
-
-    is_valid, _ = verify_session_token(token)
-    if not is_valid:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required for cloud bucket enumeration.",
         )
 
     domain = req.domain.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")
@@ -292,19 +240,6 @@ def port_scan(
         raise HTTPException(
             status_code=403,
             detail="You must confirm you own or are authorized to scan this target (authorized=true).",
-        )
-
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-    elif req.session_token:
-        token = req.session_token
-
-    is_valid, _ = verify_session_token(token)
-    if not is_valid:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required for port scanning.",
         )
 
     target = req.target.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")

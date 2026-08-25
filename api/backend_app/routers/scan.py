@@ -33,7 +33,7 @@ def full_scan(
             detail="You must confirm you own or are authorized to scan this domain (authorized=true).",
         )
 
-    # Validate session token from Header or Request Body
+    # Optional session token extraction (no login required, 100% free)
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
@@ -41,12 +41,8 @@ def full_scan(
         token = req.session_token
 
     is_valid, verified_email = verify_session_token(token)
-
-    if not is_valid:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required: You must be logged into a verified email account before scanning.",
-        )
+    if not verified_email:
+        verified_email = req.email or "anonymous@thunder-recon.local"
 
     domain = req.domain.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")
 

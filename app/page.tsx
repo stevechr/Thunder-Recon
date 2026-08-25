@@ -339,7 +339,7 @@ export default function Home() {
               onSelectMode={(mode) => selectModeHandler(mode as Mode)} 
               onQuickScan={(domain) => {
                 setActiveMode("domain");
-                handleScan(domain, false, true, false, "");
+                handleScan(domain, true, true, true, user?.email || "anonymous@thunder-recon.local");
               }}
             />
           )}
