@@ -19,7 +19,6 @@ import ExecutiveReport from "@/components/ExecutiveReport";
 import CommandPalette from "@/components/CommandPalette";
 import AttackGraph from "@/components/AttackGraph";
 import LiveAttackMap from "@/components/LiveAttackMap";
-import ThemeSelector from "@/components/ThemeSelector";
 import CommandDashboard from "@/components/CommandDashboard";
 import PostureScorecard from "@/components/PostureScorecard";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
@@ -228,8 +227,7 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Theme Selector Component */}
-            <ThemeSelector />
+            {/* Clean minimal header */}
           </div>
         </header>
 
