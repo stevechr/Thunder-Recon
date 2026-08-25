@@ -247,19 +247,21 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
 
         {/* Omnibar Search Input */}
         <form onSubmit={handleSubmit} className="w-full max-w-2xl relative pt-2">
-          <div className="relative flex items-center bg-[#0C1220]/90 border border-white/15 rounded-2xl p-2 shadow-2xl focus-within:border-cyan-400/60 focus-within:ring-4 focus-within:ring-cyan-500/10 transition-all">
-            <span className="pl-4 text-slate-400 text-base">🔍</span>
-            <input
-              type="text"
-              value={quickDomain}
-              onChange={(e) => setQuickDomain(e.target.value)}
-              placeholder="Enter domain, IPv4/IPv6 address, or URL..."
-              className="w-full bg-transparent px-4 py-3 text-white placeholder-slate-500 font-sans text-sm sm:text-base outline-none"
-            />
+          <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-[#0C1220]/90 border border-white/15 rounded-2xl p-1.5 sm:p-2 shadow-2xl focus-within:border-cyan-400/60 focus-within:ring-4 focus-within:ring-cyan-500/10 transition-all gap-2 sm:gap-0">
+            <div className="flex items-center flex-1 px-3 sm:px-0">
+              <span className="text-slate-400 text-base sm:pl-3">🔍</span>
+              <input
+                type="text"
+                value={quickDomain}
+                onChange={(e) => setQuickDomain(e.target.value)}
+                placeholder="Enter domain, IPv4/IPv6, or URL..."
+                className="w-full bg-transparent px-3 py-2.5 sm:py-3 text-white placeholder-slate-500 font-sans text-sm sm:text-base outline-none"
+              />
+            </div>
             <button
               type="submit"
               disabled={!quickDomain.trim()}
-              className="btn-cyber-primary text-sm px-6 py-3 whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none"
+              className="btn-cyber-primary text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none w-full sm:w-auto justify-center"
             >
               <span>Scan Target</span>
               <span>→</span>
@@ -269,7 +271,7 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
       </div>
 
       {/* ── 2. Real-World Geographic Global Cyber Threat & Attack Map ── */}
-      <div className="cyber-card rounded-3xl p-6 sm:p-8 border border-white/10 relative overflow-hidden shadow-2xl space-y-6">
+      <div className="cyber-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 lg:p-8 border border-white/10 relative overflow-hidden shadow-2xl space-y-4 sm:space-y-6">
         
         {/* Header Strip */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
@@ -389,9 +391,9 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
       </div>
 
       {/* ── 4. Intelligence Engine Category Switcher ── */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-white/5">
         <div>
-          <h2 className="text-lg font-semibold text-white font-display">
+          <h2 className="text-base sm:text-lg font-semibold text-white font-display">
             Specialized Intelligence Engines
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -400,7 +402,7 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
         </div>
 
         {/* Category Filter Pills */}
-        <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/10 shrink-0 gap-1">
+        <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/10 shrink-0 gap-1 w-full sm:w-auto overflow-x-auto no-scrollbar">
           {(["all", "recon", "threat", "ops"] as const).map((cat) => {
             const labels = { all: "All (16)", recon: "Recon (7)", threat: "Threat (5)", ops: "Ops (4)" };
             const isActive = activeCategory === cat;
@@ -408,7 +410,7 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial text-center ${
                   isActive
                     ? "bg-white/15 text-white font-semibold shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
@@ -422,12 +424,12 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
       </div>
 
       {/* ── 5. Clean Module Cards Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {filteredEngines.map((engine) => (
           <div
             key={engine.id}
             onClick={() => onSelectMode(engine.id)}
-            className="group cyber-card rounded-2xl p-6 border border-white/10 cursor-pointer flex flex-col justify-between hover:border-cyan-400/40 hover:bg-white/[0.04] transition-all duration-200"
+            className="group cyber-card rounded-2xl p-4 sm:p-6 border border-white/10 cursor-pointer flex flex-col justify-between hover:border-cyan-400/40 hover:bg-white/[0.04] transition-all duration-200"
           >
             <div>
               {/* Header: Icon & Tag */}

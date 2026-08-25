@@ -261,16 +261,16 @@ export default function RealWorldThreatMap() {
   };
 
   return (
-    <div className="w-full relative rounded-2xl bg-[#030712] border border-white/15 overflow-hidden shadow-2xl h-[460px] sm:h-[500px]">
+    <div className="w-full relative rounded-2xl bg-[#030712] border border-white/15 overflow-hidden shadow-2xl h-[380px] sm:h-[480px] lg:h-[520px]">
       
       {/* Actual Real-World Leaflet Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
       {/* Layer Switcher & Reset Control (Top Left) */}
-      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-1.5 bg-[#060D1E]/90 backdrop-blur-md p-1.5 rounded-xl border border-white/15 shadow-xl">
+      <div className="absolute top-2.5 left-2.5 z-[1000] flex items-center gap-1 bg-[#060D1E]/90 backdrop-blur-md p-1 rounded-xl border border-white/15 shadow-xl">
         <button
           onClick={() => setActiveTileLayer("dark")}
-          className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+          className={`px-2.5 py-1 text-[11px] sm:text-xs font-semibold rounded-lg transition-all ${
             activeTileLayer === "dark"
               ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
               : "text-slate-400 hover:text-slate-200"
@@ -280,7 +280,7 @@ export default function RealWorldThreatMap() {
         </button>
         <button
           onClick={() => setActiveTileLayer("satellite")}
-          className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+          className={`px-2.5 py-1 text-[11px] sm:text-xs font-semibold rounded-lg transition-all ${
             activeTileLayer === "satellite"
               ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
               : "text-slate-400 hover:text-slate-200"
@@ -290,7 +290,7 @@ export default function RealWorldThreatMap() {
         </button>
         <button
           onClick={handleResetView}
-          className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-white bg-white/5 hover:bg-white/10"
+          className="px-2 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-white bg-white/5 hover:bg-white/10"
           title="Reset Global View"
         >
           ↺ Reset
@@ -298,27 +298,27 @@ export default function RealWorldThreatMap() {
       </div>
 
       {/* Live Ballistic Stream Ticker (Top Right) */}
-      <div className="absolute top-3 right-3 z-[1000] max-w-xs hidden sm:block bg-[#060D1E]/90 backdrop-blur-md p-3 rounded-xl border border-white/15 text-[10px] font-mono space-y-1.5 shadow-xl">
-        <div className="text-slate-400 font-bold tracking-wider text-[9px] uppercase border-b border-white/10 pb-1.5 flex items-center justify-between">
+      <div className="absolute top-2.5 right-2.5 z-[1000] max-w-[220px] sm:max-w-xs hidden sm:block bg-[#060D1E]/90 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 text-[10px] font-mono space-y-1.5 shadow-xl">
+        <div className="text-slate-400 font-bold tracking-wider text-[9px] uppercase border-b border-white/10 pb-1 flex items-center justify-between">
           <span>LIVE BALLISTIC STREAM</span>
           <span className="text-rose-400 animate-pulse font-semibold">● ACTIVE</span>
         </div>
         {recentVectors.slice(0, 3).map((vec) => (
-          <div key={vec.id} className="text-slate-300 truncate" style={{ borderLeft: `2px solid ${vec.color}`, paddingLeft: "6px" }}>
+          <div key={vec.id} className="text-slate-300 truncate text-[10px]" style={{ borderLeft: `2px solid ${vec.color}`, paddingLeft: "6px" }}>
             {vec.text}
           </div>
         ))}
       </div>
 
-      {/* Selected Country Tactical Inspector Modal (Bottom Left) */}
+      {/* Selected Country Tactical Inspector Modal (Bottom Left / Full Width on Mobile) */}
       {selectedCountry && (
-        <div className="absolute bottom-3 left-3 z-[1000] bg-[#060D1D]/95 backdrop-blur-md px-4 py-3 rounded-xl border border-cyan-400/40 text-xs font-mono flex items-center gap-5 shadow-2xl animate-fadeIn">
+        <div className="absolute bottom-2.5 left-2.5 right-2.5 sm:right-auto sm:max-w-md z-[1000] bg-[#060D1D]/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-cyan-400/40 text-xs font-mono flex items-center justify-between gap-3 shadow-2xl animate-fadeIn">
           <div>
-            <span className="text-white font-bold text-sm flex items-center gap-1.5">
-              <span className="text-lg">{selectedCountry.flag}</span>
+            <span className="text-white font-bold text-xs sm:text-sm flex items-center gap-1.5">
+              <span className="text-base sm:text-lg">{selectedCountry.flag}</span>
               <span>{selectedCountry.name} ({selectedCountry.code})</span>
             </span>
-            <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-3">
+            <div className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
               <span>Status: <strong className="text-cyan-300">{selectedCountry.status}</strong></span>
               <span>Flow: <strong className="text-rose-400">{selectedCountry.traffic}</strong></span>
               <span>Attacks: <strong className="text-amber-400">{selectedCountry.activeAttacks.toLocaleString()}/min</strong></span>
@@ -326,7 +326,7 @@ export default function RealWorldThreatMap() {
           </div>
           <button
             onClick={() => setSelectedCountry(null)}
-            className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded bg-white/10"
+            className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded bg-white/10 shrink-0"
           >
             ✕
           </button>
@@ -334,7 +334,7 @@ export default function RealWorldThreatMap() {
       )}
 
       {/* Bottom Map Legend (Bottom Right) */}
-      <div className="absolute bottom-3 right-14 z-[1000] hidden md:flex items-center gap-3 bg-[#060D1E]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-[10px] font-mono text-slate-300 shadow-xl">
+      <div className="absolute bottom-2.5 right-14 z-[1000] hidden md:flex items-center gap-3 bg-[#060D1E]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-[10px] font-mono text-slate-300 shadow-xl">
         <span className="flex items-center gap-1 text-rose-400">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> UDP/DDoS
         </span>

@@ -212,3 +212,32 @@ body {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Mobile & Touch Next-Level Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    touch-action: pan-x pan-y;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .leaflet-container {
+    touch-action: pan-x pan-y !important;
+  }
+}

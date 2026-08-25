@@ -85,6 +85,7 @@ export default function Home() {
   const [pendingTargetDomain, setPendingTargetDomain] = useState("");
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -129,6 +130,13 @@ export default function Home() {
     setUser(null);
   };
 
+  const selectModeHandler = (mode: Mode) => {
+    setActiveMode(mode);
+    setResult(null);
+    setError(null);
+    setMobileDrawerOpen(false);
+  };
+
   // Group tabs for sidebar
   const groupedTabs = {
     "Reconnaissance & Surface": TABS.filter(t => t.category === "recon"),
@@ -139,12 +147,12 @@ export default function Home() {
   return (
     <div className="flex h-screen w-full cyber-bg-pattern overflow-hidden text-slate-200 font-sans">
       
-      {/* ── Sidebar (Glassmorphic) ── */}
-      <div className={`relative z-20 flex flex-col h-full bg-[#060912]/90 backdrop-blur-2xl border-r border-white/5 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+      {/* ── Desktop Sidebar (Glassmorphic) ── */}
+      <aside className={`hidden md:flex relative z-20 flex-col h-full bg-[#060912]/90 backdrop-blur-2xl border-r border-white/5 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
         
         {/* Sidebar Header */}
         <div 
-          onClick={() => { setActiveMode("none"); setResult(null); setError(null); }}
+          onClick={() => selectModeHandler("none")}
           className="p-4 flex items-center justify-between border-b border-white/5 bg-transparent cursor-pointer hover:bg-white/[0.03] transition"
           title="Go to Command Dashboard"
         >
@@ -171,11 +179,11 @@ export default function Home() {
                   return (
                     <button
                       key={tab.key}
-                      onClick={() => { setActiveMode(tab.key); setResult(null); setError(null); }}
+                      onClick={() => selectModeHandler(tab.key)}
                       title={!sidebarOpen ? tab.label : undefined}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left ${
                         isActive 
-                          ? 'bg-white/10 text-white font-medium' 
+                          ? 'bg-cyan-500/15 border border-cyan-500/30 text-white font-medium shadow-[0_0_15px_rgba(0,245,212,0.1)]' 
                           : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
                       }`}
                     >
@@ -205,43 +213,130 @@ export default function Home() {
             )}
           </button>
         </div>
-      </div>
+      </aside>
+
+      {/* ── Mobile Slide-Over Drawer Modal ── */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop Blur */}
+          <div 
+            onClick={() => setMobileDrawerOpen(false)} 
+            className="fixed inset-0 bg-black/75 backdrop-blur-md animate-fadeIn" 
+          />
+          
+          {/* Drawer Content */}
+          <div className="relative z-10 w-4/5 max-w-sm h-full bg-[#060912] border-r border-white/10 flex flex-col p-4 shadow-2xl animate-fadeIn">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <span className="text-cyan-400 font-mono text-xl">⚡</span>
+                <span className="font-display font-bold text-white tracking-tight text-sm">THUNDER RECON</span>
+              </div>
+              <button 
+                onClick={() => setMobileDrawerOpen(false)}
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar">
+              {Object.entries(groupedTabs).map(([category, items]) => (
+                <div key={category} className="space-y-1">
+                  <div className="text-[10px] font-medium text-cyan-400/80 uppercase tracking-wider px-2">{category}</div>
+                  <div className="space-y-1">
+                    {items.map((tab) => {
+                      const isActive = activeMode === tab.key;
+                      return (
+                        <button
+                          key={tab.key}
+                          onClick={() => selectModeHandler(tab.key)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left text-xs ${
+                            isActive
+                              ? 'bg-cyan-500/15 border border-cyan-500/30 text-white font-semibold'
+                              : 'text-slate-300 hover:bg-white/5'
+                          }`}
+                        >
+                          <span className="text-base">{tab.icon}</span>
+                          <span className="truncate">{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-white/10">
+              <button 
+                onClick={() => { setMobileDrawerOpen(false); setIsCommandPaletteOpen(true); }}
+                className="w-full py-2.5 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-slate-300 flex items-center justify-center gap-2"
+              >
+                <span>🔍</span> Search Tools &amp; Engines (⌘K)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Main Workspace ── */}
       <div className="flex-1 relative z-10 flex flex-col h-full overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-[#060912]/80 backdrop-blur-xl shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 border-b border-white/5 bg-[#060912]/90 backdrop-blur-xl shrink-0">
+          <div className="flex items-center gap-3">
+            
+            {/* Desktop Sidebar Toggle */}
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition"
+              className="hidden md:flex text-slate-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition"
               title="Toggle Sidebar"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <div className="hidden md:flex items-center gap-2 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="text-slate-400 text-xs">Systems Operational</span>
+
+            {/* Mobile Drawer Button */}
+            <button 
+              onClick={() => setMobileDrawerOpen(true)}
+              className="md:hidden text-slate-300 p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
+              title="Open Navigation Menu"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+
+            {/* Brand in Mobile Navbar */}
+            <div 
+              onClick={() => selectModeHandler("none")}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <span className="text-cyan-400 font-mono text-lg">⚡</span>
+              <span className="font-display font-bold text-white tracking-tight text-xs sm:text-sm">THUNDER RECON</span>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 text-xs ml-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-slate-400 text-xs">Live Telemetry</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Clean minimal header */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-slate-300 flex items-center gap-1.5"
+              title="Search tools (⌘K)"
+            >
+              <span>🔍</span>
+              <span className="hidden sm:inline">Search</span>
+            </button>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex justify-center scrollbar-thin">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 flex justify-center scrollbar-thin">
           
           {/* Landing State: Modern Cyber Command Dashboard */}
           {activeMode === "none" && (
             <CommandDashboard 
-              onSelectMode={(mode) => { 
-                setActiveMode(mode as Mode); 
-                setResult(null); 
-                setError(null); 
-              }} 
+              onSelectMode={(mode) => selectModeHandler(mode as Mode)} 
               onQuickScan={(domain) => {
                 setActiveMode("domain");
                 handleScan(domain, false, true, false, "");
@@ -254,24 +349,24 @@ export default function Home() {
             <div className="w-full max-w-[1600px] flex flex-col items-center animate-fadeIn">
               
               {/* Top Close / Return to Dashboard Button */}
-              <div className="w-full flex justify-between items-center mb-4">
+              <div className="w-full flex justify-between items-center mb-4 gap-2">
                 <button
-                  onClick={() => setActiveMode("none")}
-                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-slate-300 transition-all flex items-center gap-2"
+                  onClick={() => selectModeHandler("none")}
+                  className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-slate-300 transition-all flex items-center gap-1.5"
                 >
-                  <span>←</span> Return to Command Dashboard
+                  <span>←</span> Return to Hub
                 </button>
 
                 <button 
-                  onClick={() => setActiveMode("none")}
-                  className="px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 hover:text-rose-300 text-xs text-rose-400 transition-all flex items-center gap-1.5"
+                  onClick={() => selectModeHandler("none")}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 hover:text-rose-300 text-xs text-rose-400 transition-all flex items-center gap-1.5"
                 >
                   ✕ Close Tool
                 </button>
               </div>
 
               {/* The Glassmorphic Tool Wrapper */}
-              <div className="w-full cyber-card rounded-2xl shadow-2xl p-4 sm:p-8 relative">
+              <div className="w-full cyber-card rounded-2xl shadow-2xl p-3 sm:p-6 lg:p-8 relative">
                 
                 {/* 1. Domain Recon */}
                 {activeMode === "domain" && (
@@ -335,12 +430,64 @@ export default function Home() {
             </div>
           )}
         </main>
+
+        {/* ── Fixed Mobile Bottom Navigation Bar (Next-Level Native App Feel) ── */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#060912]/95 backdrop-blur-2xl border-t border-white/10 px-2 py-2 flex items-center justify-around safe-bottom shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+          <button
+            onClick={() => selectModeHandler("none")}
+            className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all ${
+              activeMode === "none" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span className="text-lg">⚡</span>
+            <span className="text-[10px] font-medium tracking-tight">Hub</span>
+          </button>
+
+          <button
+            onClick={() => selectModeHandler("domain")}
+            className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all ${
+              activeMode === "domain" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span className="text-lg">🛡️</span>
+            <span className="text-[10px] font-medium tracking-tight">Recon</span>
+          </button>
+
+          <button
+            onClick={() => selectModeHandler("attack_map")}
+            className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all ${
+              activeMode === "attack_map" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span className="text-lg">🌐</span>
+            <span className="text-[10px] font-medium tracking-tight">Radar</span>
+          </button>
+
+          <button
+            onClick={() => selectModeHandler("scorecard")}
+            className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all ${
+              activeMode === "scorecard" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span className="text-lg">📊</span>
+            <span className="text-[10px] font-medium tracking-tight">Score</span>
+          </button>
+
+          <button
+            onClick={() => setMobileDrawerOpen(true)}
+            className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl text-slate-400 hover:text-slate-200 transition-all"
+          >
+            <span className="text-lg">🧰</span>
+            <span className="text-[10px] font-medium tracking-tight">All Tools</span>
+          </button>
+        </nav>
+
       </div>
 
       <CommandPalette 
         isOpen={isCommandPaletteOpen} 
         onClose={() => setIsCommandPaletteOpen(false)} 
-        onSelectMode={(mode) => setActiveMode(mode as Mode)} 
+        onSelectMode={(mode) => selectModeHandler(mode as Mode)} 
         onTriggerScan={(domain) => {
           setActiveMode("domain");
           handleScan(domain, false, true, false, "");
