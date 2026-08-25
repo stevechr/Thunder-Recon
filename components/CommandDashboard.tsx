@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface CommandDashboardProps {
   onSelectMode: (mode: string) => void;
@@ -9,13 +9,219 @@ interface CommandDashboardProps {
 
 export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandDashboardProps) {
   const [quickDomain, setQuickDomain] = useState("");
+  const [activeCategory, setActiveCategory] = useState<"all" | "recon" | "threat" | "ops">("all");
+  const [pingLatency, setPingLatency] = useState(28);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPingLatency(Math.floor(22 + Math.random() * 15));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const SAMPLE_TARGETS = [
-    { name: "cloudflare.com", tag: "CDN & Edge" },
-    { name: "github.com", tag: "Code & Dev" },
-    { name: "nasa.gov", tag: "Gov / Edu" },
-    { name: "1.1.1.1", tag: "Public DNS IP" },
+    { name: "cloudflare.com", tag: "CDN & Edge", ping: "8ms", icon: "☁️" },
+    { name: "github.com", tag: "Code & Dev", ping: "14ms", icon: "🐙" },
+    { name: "nasa.gov", tag: "Gov / Edu", ping: "38ms", icon: "🚀" },
+    { name: "1.1.1.1", tag: "Public DNS", ping: "4ms", icon: "📡" },
   ];
+
+  const THREAT_FEED = [
+    "🚨 [CVE-2024-38077 Windows RCE] ACTIVE EXPLOITATION DETECTED",
+    "🛡️ [DNSSEC ROOT] 100% cryptographic zone validation intact",
+    "⚡ [BGP MONITOR] Zero anomalous route hijacking on major tier-1 backbones",
+    "🔐 [TLS 1.3] 99.4% cipher negotiation across global endpoints",
+    "🌐 [CERT-TRANSPARENCY] 24,000+ new subdomains ingested in real-time",
+    "🧪 [SANDBOX ENGINE] 0-day heuristic behavioral analysis armed",
+  ];
+
+  const ALL_ENGINES = [
+    // Recon
+    {
+      id: "domain",
+      title: "Domain Recon Hub",
+      category: "recon",
+      icon: "🛡️",
+      tag: "CORE SCANNER",
+      desc: "Full-spectrum surface intelligence: DNS topology, WHOIS, IP geolocation, SSL/TLS, open ports, and tech stack fingerprinting.",
+      capabilities: ["DNS Records", "WHOIS", "Tech Stack", "Open Ports"],
+      accent: "#00F0FF",
+      badgeColor: "text-cyan-300 bg-cyan-950/80 border-cyan-500/40",
+    },
+    {
+      id: "scorecard",
+      title: "Threat Scorecard & Posture",
+      category: "recon",
+      icon: "📊",
+      tag: "MIL-SPEC AUDIT",
+      desc: "A+ to F automated security defense scoring across 4 pillars (Transport, Headers, Zone, Anti-Spoof) with remediation playbooks.",
+      capabilities: ["A+ to F Grading", "Remediation Code", "Nginx/Apache Config", "Zone Fixes"],
+      accent: "#10B981",
+      badgeColor: "text-emerald-300 bg-emerald-950/80 border-emerald-500/40",
+    },
+    {
+      id: "subdomains",
+      title: "Subdomain Enumerator",
+      category: "recon",
+      icon: "🌳",
+      tag: "CERT TRANSPARENCY",
+      desc: "Instant passive and active asset discovery leveraging Certificate Transparency logs (crt.sh) and DNS brute-force correlation.",
+      capabilities: ["crt.sh Logs", "Wildcard Match", "Instant Export", "IP Mapping"],
+      accent: "#38BDF8",
+      badgeColor: "text-sky-300 bg-sky-950/80 border-sky-500/40",
+    },
+    {
+      id: "dns",
+      title: "DNS Intelligence Matrix",
+      category: "recon",
+      icon: "📡",
+      tag: "RESOLVER ZONE",
+      desc: "Deep resolution for A, AAAA, MX, TXT, NS, CNAME, SOA, and CAA records with DNSSEC validation and mail safety warnings.",
+      capabilities: ["DNSSEC Check", "IPv4/IPv6", "Mail MX Routing", "CAA Validation"],
+      accent: "#6366F1",
+      badgeColor: "text-indigo-300 bg-indigo-950/80 border-indigo-500/40",
+    },
+    {
+      id: "ssl",
+      title: "SSL/TLS Cryptographic Auditor",
+      category: "recon",
+      icon: "🔐",
+      tag: "TRANSPORT CRYPTO",
+      desc: "Deep cryptographic handshake audit: certificate chains, cipher strength, expiration countdowns, and SAN enumeration.",
+      capabilities: ["Chain Inspection", "TLS 1.3 / 1.2", "Expiry Alert", "Cipher Suite"],
+      accent: "#EC4899",
+      badgeColor: "text-pink-300 bg-pink-950/80 border-pink-500/40",
+    },
+    {
+      id: "headers",
+      title: "Security Headers Analyzer",
+      category: "recon",
+      icon: "📋",
+      tag: "HTTP HARDENING",
+      desc: "Instant evaluation of HSTS, CSP, X-Frame-Options, CORS, and info leakage with actionable config recommendations.",
+      capabilities: ["HSTS Strict", "CSP Policy", "Clickjacking", "Info Leaks"],
+      accent: "#F59E0B",
+      badgeColor: "text-amber-300 bg-amber-950/80 border-amber-500/40",
+    },
+    {
+      id: "whois",
+      title: "WHOIS Forensics & Age",
+      category: "recon",
+      icon: "🕵️",
+      tag: "DOMAIN REGISTRY",
+      desc: "Registrar identification, domain age calculation, expiration countdown, name servers, and abuse contact intelligence.",
+      capabilities: ["Domain Age", "Abuse Email", "Registrar Info", "Status Codes"],
+      accent: "#8B5CF6",
+      badgeColor: "text-purple-300 bg-purple-950/80 border-purple-500/40",
+    },
+
+    // Threat
+    {
+      id: "ip",
+      title: "IP Threat Map & Geo-Intel",
+      category: "threat",
+      icon: "🌐",
+      tag: "RADAR GEOLOCATION",
+      desc: "IP threat scoring, Autonomous System (ASN) lookup, country/city coordinates, ISP identification, and reverse DNS mapping.",
+      capabilities: ["ASN Lookup", "Threat Score", "ISP Detection", "Geo Mapping"],
+      accent: "#06B6D4",
+      badgeColor: "text-cyan-300 bg-cyan-950/80 border-cyan-500/40",
+    },
+    {
+      id: "sandbox",
+      title: "URL & File Threat Sandbox",
+      category: "threat",
+      icon: "🧪",
+      tag: "BEHAVIORAL ENGINE",
+      desc: "Safe heuristic analysis for suspicious URLs and files. Detects malicious redirects, phishing indicators, and payload risks.",
+      capabilities: ["Redirect Trace", "Phishing Check", "Payload Score", "Heuristics"],
+      accent: "#F43F5E",
+      badgeColor: "text-rose-300 bg-rose-950/80 border-rose-500/40",
+    },
+    {
+      id: "pwned",
+      title: "Breach & Leak Hunter",
+      category: "threat",
+      icon: "☠️",
+      tag: "EXPOSURE RADAR",
+      desc: "Cross-reference target email addresses and domains against billions of compromised credentials in public breach dumps.",
+      capabilities: ["HIBP Check", "Credential Leak", "Paste Searches", "Password Risk"],
+      accent: "#EF4444",
+      badgeColor: "text-red-300 bg-red-950/80 border-red-500/40",
+    },
+    {
+      id: "cve",
+      title: "CVE Exploit & Vulnerability Search",
+      category: "threat",
+      icon: "🚨",
+      tag: "NVD INTELLIGENCE",
+      desc: "Query the National Vulnerability Database (NVD) in real-time. CVSS v3.1 severity scores, exploit metrics, and patch advisories.",
+      capabilities: ["CVSS v3.1", "NVD Sync", "Vector String", "Advisories"],
+      accent: "#FB923C",
+      badgeColor: "text-orange-300 bg-orange-950/80 border-orange-500/40",
+    },
+    {
+      id: "email",
+      title: "Email Security (DMARC & SPF)",
+      category: "threat",
+      icon: "📧",
+      tag: "ANTI-SPOOFING",
+      desc: "Comprehensive email security verification: DMARC policies, SPF alignment, DKIM selector checks, and spoofability grading.",
+      capabilities: ["DMARC Policy", "SPF Alignment", "DKIM Selectors", "Anti-Phishing"],
+      accent: "#22C55E",
+      badgeColor: "text-green-300 bg-green-950/80 border-green-500/40",
+    },
+
+    // Ops
+    {
+      id: "attack_map",
+      title: "3D Live Cyber Globe",
+      category: "ops",
+      icon: "🌍",
+      tag: "WEBGL HUD",
+      desc: "Interactive 3D planetary visualizer plotting live global attack vectors, IP geo-arcs, and real-time defense interceptions.",
+      capabilities: ["3D WebGL", "Arc Geometries", "Atmosphere Mesh", "Interactive Controls"],
+      accent: "#3B82F6",
+      badgeColor: "text-blue-300 bg-blue-950/80 border-blue-500/40",
+    },
+    {
+      id: "topology",
+      title: "Attack Surface Topology",
+      category: "ops",
+      icon: "🕸️",
+      tag: "GRAPH MATRIX",
+      desc: "Interactive node graph connecting domains, subdomains, IPs, open ports, and vulnerabilities into an actionable map.",
+      capabilities: ["Node Clustering", "Force Graph", "Attack Pathing", "Pivot Analysis"],
+      accent: "#A855F7",
+      badgeColor: "text-purple-300 bg-purple-950/80 border-purple-500/40",
+    },
+    {
+      id: "toolkit",
+      title: "Swiss Sec Utility Toolkit",
+      category: "ops",
+      icon: "🔧",
+      tag: "OFFENSIVE SUITE",
+      desc: "Essential security utilities: Subnet calculator, Hash identifier, Base64/Hex encoders, JWT decoder, and Password entropy checker.",
+      capabilities: ["Subnet Calc", "Hash Identifier", "JWT Inspector", "Encoders"],
+      accent: "#14B8A6",
+      badgeColor: "text-teal-300 bg-teal-950/80 border-teal-500/40",
+    },
+    {
+      id: "report",
+      title: "Executive Pentest Report Generator",
+      category: "ops",
+      icon: "📑",
+      tag: "COMPLIANCE EXPORT",
+      desc: "Generate professional executive security summaries and pentest audit reports in printable HTML/PDF and Markdown formats.",
+      capabilities: ["PDF Ready", "Executive Summary", "Findings Matrix", "Compliance Ready"],
+      accent: "#EAB308",
+      badgeColor: "text-yellow-300 bg-yellow-950/80 border-yellow-500/40",
+    },
+  ];
+
+  const filteredEngines = activeCategory === "all"
+    ? ALL_ENGINES
+    : ALL_ENGINES.filter((e) => e.category === activeCategory);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,323 +229,206 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
     onQuickScan(quickDomain.trim());
   };
 
-  const FEATURED_ENGINES = [
-    {
-      id: "domain",
-      title: "Domain Recon Hub",
-      icon: "🛡️",
-      tag: "CORE SCANNER",
-      desc: "Full-spectrum perimeter intelligence: DNS mapping, WHOIS, IP geolocation, SSL/TLS, port discovery, and technology stack fingerprinting.",
-      accent: "#00F0FF",
-      glowClass: "hover:shadow-[0_0_30px_rgba(0,240,255,0.25)] hover:border-cyan-400/60",
-      badgeColor: "text-cyan-300 bg-cyan-950/80 border-cyan-500/40",
-    },
-    {
-      id: "scorecard",
-      title: "Cyber Threat Scorecard",
-      icon: "📊",
-      tag: "POSTURE & AUDIT",
-      desc: "A+ to F security posture grading with 4 defense pillars (Transport, Headers, DNS, Anti-Spoofing) and instant remediation configs.",
-      accent: "#10B981",
-      glowClass: "hover:shadow-[0_0_30px_rgba(16,185,129,0.25)] hover:border-emerald-400/60",
-      badgeColor: "text-emerald-300 bg-emerald-950/80 border-emerald-500/40",
-    },
-    {
-      id: "subdomains",
-      title: "Subdomain Enumerator",
-      icon: "🌳",
-      tag: "CERT TRANSPARENCY",
-      desc: "Instant passive & active asset discovery using Certificate Transparency (crt.sh) logs and DNS brute correlation.",
-      accent: "#38BDF8",
-      glowClass: "hover:shadow-[0_0_30px_rgba(56,189,248,0.25)] hover:border-sky-400/60",
-      badgeColor: "text-sky-300 bg-sky-950/80 border-sky-500/40",
-    },
-    {
-      id: "dns",
-      title: "DNS Record Intelligence",
-      icon: "📡",
-      tag: "NAMESERVER & MX",
-      desc: "Deep record lookup for A, AAAA, MX, NS, TXT, CAA, SOA, CNAME records with DNSSEC validation status.",
-      accent: "#3B82F6",
-      glowClass: "hover:shadow-[0_0_30px_rgba(59,130,246,0.25)] hover:border-blue-400/60",
-      badgeColor: "text-blue-300 bg-blue-950/80 border-blue-500/40",
-    },
-    {
-      id: "ssl",
-      title: "SSL/TLS Security Auditor",
-      icon: "🔐",
-      tag: "CRYPTO AUDITOR",
-      desc: "Deep cryptographic audit: validity timelines, certificate issuer chain, SANs, cipher protocols, and expiration alerts.",
-      accent: "#10B981",
-      glowClass: "hover:shadow-[0_0_30px_rgba(16,185,129,0.25)] hover:border-emerald-400/60",
-      badgeColor: "text-emerald-300 bg-emerald-950/80 border-emerald-500/40",
-    },
-    {
-      id: "headers",
-      title: "Security Headers Analyzer",
-      icon: "📋",
-      tag: "HARDENING AUDIT",
-      desc: "Evaluates CSP, HSTS, X-Frame-Options, CORS headers, Permissions-Policy, and cookie security flags.",
-      accent: "#14B8A6",
-      glowClass: "hover:shadow-[0_0_30px_rgba(20,184,166,0.25)] hover:border-teal-400/60",
-      badgeColor: "text-teal-300 bg-teal-950/80 border-teal-500/40",
-    },
-    {
-      id: "ip",
-      title: "IP Threat & Geolocation",
-      icon: "🌐",
-      tag: "GEO & ASN INTEL",
-      desc: "Extract IP coordinates, ISP carrier, Autonomous System (ASN), reverse PTR records, and malicious abuse scores.",
-      accent: "#818CF8",
-      glowClass: "hover:shadow-[0_0_30px_rgba(129,140,248,0.25)] hover:border-indigo-400/60",
-      badgeColor: "text-indigo-300 bg-indigo-950/80 border-indigo-500/40",
-    },
-    {
-      id: "whois",
-      title: "WHOIS & Registrar Forensics",
-      icon: "🕵️",
-      tag: "REGISTRY INTEL",
-      desc: "Domain registrant data, creation & expiry timestamps, raw registry telemetry, and privacy protection indicators.",
-      accent: "#C084FC",
-      glowClass: "hover:shadow-[0_0_30px_rgba(192,132,252,0.25)] hover:border-purple-400/60",
-      badgeColor: "text-purple-300 bg-purple-950/80 border-purple-500/40",
-    },
-    {
-      id: "sandbox",
-      title: "URL & File Sandbox",
-      icon: "🧪",
-      tag: "DYNAMIC DETONATION",
-      desc: "Live behavioral analysis for suspicious URLs and files with heuristic threat scoring and redirect tracking.",
-      accent: "#A855F7",
-      glowClass: "hover:shadow-[0_0_30px_rgba(168,85,247,0.25)] hover:border-violet-400/60",
-      badgeColor: "text-violet-300 bg-violet-950/80 border-violet-500/40",
-    },
-    {
-      id: "pwned",
-      title: "Breach & Credential Hunter",
-      icon: "☠️",
-      tag: "15B+ LEAK RECORDS",
-      desc: "Search global exposed database breaches for compromised organizational emails, passwords, and data leaks.",
-      accent: "#F43F5E",
-      glowClass: "hover:shadow-[0_0_30px_rgba(244,63,94,0.25)] hover:border-rose-400/60",
-      badgeColor: "text-rose-300 bg-rose-950/80 border-rose-500/40",
-    },
-    {
-      id: "cve",
-      title: "CVE Exploit Database",
-      icon: "🚨",
-      tag: "NIST NVD VULNS",
-      desc: "Query national vulnerability databases with real-time CVSS v3.1 severity scores, CWE vectors, and exploit links.",
-      accent: "#F59E0B",
-      glowClass: "hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:border-amber-400/60",
-      badgeColor: "text-amber-300 bg-amber-950/80 border-amber-500/40",
-    },
-    {
-      id: "email",
-      title: "Email Security & DMARC/SPF",
-      icon: "📧",
-      tag: "ANTI-SPOOFING",
-      desc: "Audit email authentication mechanisms (DMARC, SPF, DKIM, MX) to mitigate phishing and sender impersonation.",
-      accent: "#FB923C",
-      glowClass: "hover:shadow-[0_0_30px_rgba(251,146,60,0.25)] hover:border-orange-400/60",
-      badgeColor: "text-orange-300 bg-orange-950/80 border-orange-500/40",
-    },
-    {
-      id: "attack_map",
-      title: "3D Live Attack Globe",
-      icon: "🌍",
-      tag: "REALTIME 3D WAR ROOM",
-      desc: "Interactive 3D WebGL cyber attack simulator with real-time vector arcs, live threat telemetry, and DEFCON levels.",
-      accent: "#22D3EE",
-      glowClass: "hover:shadow-[0_0_35px_rgba(34,211,238,0.3)] hover:border-cyan-300/70",
-      badgeColor: "text-cyan-200 bg-cyan-950/90 border-cyan-400/60",
-    },
-  ];
-
-  const QUICK_ACTIONS = [
-    { id: "toolkit", icon: "🔧", label: "Swiss Army Sec Toolkit", desc: "Hashes, subnet CIDR, decoders" },
-    { id: "topology", icon: "🕸️", label: "Attack Topology Graph", desc: "Node & exploit vector mapping" },
-    { id: "report", icon: "📑", label: "Executive Pentest Report", desc: "Audit summary & PDF export" },
-  ];
-
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8 animate-fadeIn py-2 relative z-10">
+    <div className="w-full max-w-6xl mx-auto space-y-8 animate-fadeIn">
       
-      {/* ── Hero Glassmorphic Command Section ── */}
-      <div className="relative overflow-hidden rounded-3xl cyber-card p-6 sm:p-10 border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
-        
-        {/* Glow Spheres */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none -mr-24 -mt-24" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/15 rounded-full blur-[100px] pointer-events-none -ml-24 -mb-24" />
-        
-        {/* Animated Scanner Line */}
+      {/* ── 1. Live SOC Threat Intelligence Stream Ticker ── */}
+      <div className="w-full overflow-hidden rounded-xl bg-black/60 border border-white/10 py-2 px-3 flex items-center gap-3 backdrop-blur-md">
+        <div className="flex items-center gap-2 shrink-0 pr-3 border-r border-white/10 text-[10px] font-mono font-bold text-cyan-400">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <span>THREAT FEED</span>
+        </div>
+        <div className="overflow-hidden whitespace-nowrap flex-1">
+          <div className="animate-marquee gap-8 text-[11px] font-mono text-slate-300">
+            {THREAT_FEED.map((item, idx) => (
+              <span key={idx} className="inline-flex items-center gap-2">
+                <span>{item}</span>
+                <span className="text-white/20">•</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── 2. Hero Cyber Command Launcher HUD ── */}
+      <div className="relative rounded-3xl p-8 sm:p-10 cyber-card border border-white/15 overflow-hidden shadow-2xl">
         <div className="cyber-scanner-line" />
 
-        <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto space-y-5">
+        <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto">
           
-          {/* Top Cyber Badge */}
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 text-xs font-mono shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#00F0FF]" />
-            <span className="font-bold tracking-wider">THUNDER RECON v4.0</span>
-            <span className="text-cyan-400/40">|</span>
-            <span className="text-slate-300">MIL-SPEC CYBER SUITE</span>
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-mono font-bold uppercase tracking-wider mb-4 shadow-[0_0_15px_rgba(0,240,255,0.15)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+            MIL-SPEC CYBER RECONNAISSANCE ENGINE • v4.0
           </div>
 
-          {/* Heading */}
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
-            Offensive Reconnaissance &amp; Attack Surface Intelligence
+          {/* Main Title */}
+          <h1 className="text-3xl sm:text-5xl font-extrabold font-display text-white tracking-tight leading-tight">
+            Next-Gen Attack Surface <br />
+            <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500 bg-clip-text text-transparent">
+              Intelligence &amp; Threat Forensics
+            </span>
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl font-sans leading-relaxed">
-            High-precision intelligence platform providing instant domain reconnaissance, passive DNS &amp; SSL cryptography analysis, breach hunting, and real-time vulnerability scans.
+          <p className="text-sm sm:text-base text-slate-300 mt-4 leading-relaxed font-sans max-w-2xl">
+            Execute passive OSINT scans, cryptographic audits, vulnerability matrices, and instant posture scoring across global enterprise targets.
           </p>
 
-          {/* Main Quick Scanner Bar */}
-          <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-2">
-            <div className="flex flex-col sm:flex-row gap-2 p-2 rounded-2xl bg-black/80 border border-white/20 backdrop-blur-xl shadow-2xl focus-within:border-cyan-400 focus-within:ring-4 focus-within:ring-cyan-500/20 transition-all duration-300">
-              <div className="flex-1 flex items-center px-3.5 gap-2.5">
-                <span className="text-cyan-400 font-mono text-lg drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]">⚡</span>
-                <input
-                  type="text"
-                  value={quickDomain}
-                  onChange={(e) => setQuickDomain(e.target.value)}
-                  placeholder="Enter domain or IP (e.g. cloudflare.com, 1.1.1.1)..."
-                  className="w-full bg-transparent text-white placeholder-slate-400 text-sm font-mono focus:outline-none"
-                />
+          {/* Omnibar Input */}
+          <form onSubmit={handleSubmit} className="w-full mt-8 relative">
+            <div className="relative flex items-center">
+              <div className="absolute left-4 text-cyan-400 text-lg pointer-events-none">
+                ⚡
               </div>
+              <input
+                type="text"
+                value={quickDomain}
+                onChange={(e) => setQuickDomain(e.target.value)}
+                placeholder="Enter target domain, IPv4/IPv6, or URL (e.g. cloudflare.com)..."
+                className="w-full pl-12 pr-32 py-4 rounded-2xl bg-black/80 border border-white/20 text-white font-mono text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all shadow-inner"
+              />
               <button
                 type="submit"
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-black font-extrabold text-xs tracking-wider uppercase font-mono shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] transition-all duration-200 flex items-center justify-center gap-2"
+                disabled={!quickDomain.trim()}
+                className="absolute right-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-xs font-mono uppercase tracking-wider transition-all disabled:opacity-40 disabled:pointer-events-none shadow-[0_0_20px_rgba(0,240,255,0.3)] flex items-center gap-1.5"
               >
                 <span>Launch Recon</span>
-                <span className="text-sm font-bold">→</span>
+                <span>→</span>
               </button>
             </div>
           </form>
 
-          {/* 1-Click Sample Target Quick-Launch Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-            <span className="text-[11px] font-mono text-slate-400">Quick Test:</span>
-            {SAMPLE_TARGETS.map((sample) => (
+          {/* 1-Click Sample Target Cards */}
+          <div className="w-full mt-5 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
+              <span>🎯</span> Sample Targets:
+            </span>
+            {SAMPLE_TARGETS.map((t) => (
               <button
-                key={sample.name}
-                type="button"
-                onClick={() => {
-                  setQuickDomain(sample.name);
-                  onQuickScan(sample.name);
-                }}
-                className="cyber-glow-pill px-2.5 py-1 rounded-lg text-[11px] font-mono text-slate-300 hover:text-cyan-300 hover:border-cyan-400/60 transition-all flex items-center gap-1.5"
+                key={t.name}
+                onClick={() => onQuickScan(t.name)}
+                className="cyber-glow-pill px-3 py-1.5 rounded-xl text-xs font-mono text-slate-200 flex items-center gap-2 group transition-all"
               >
-                <span className="text-cyan-400">⚡</span>
-                <span className="font-semibold">{sample.name}</span>
-                <span className="text-[9px] text-slate-400">({sample.tag})</span>
+                <span>{t.icon}</span>
+                <span className="font-semibold text-white group-hover:text-cyan-300 transition-colors">{t.name}</span>
+                <span className="text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded border border-white/10 font-sans">{t.tag}</span>
               </button>
             ))}
           </div>
 
-          {/* Real-time Status Badges */}
-          <div className="pt-3 border-t border-white/10 w-full flex flex-wrap items-center justify-center gap-5 text-xs font-mono text-slate-400">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10B981]" />
-              <span className="text-slate-200 font-semibold">14 Verified Engines Online</span>
-            </div>
-            <span className="text-white/20 hidden sm:inline">•</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-cyan-400 font-bold">⚡</span>
-              <span>Sub-Second CT Logs</span>
-            </div>
-            <span className="text-white/20 hidden sm:inline">•</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-purple-400">🛡️</span>
-              <span>NIST NVD Live Sync</span>
-            </div>
-            <span className="text-white/20 hidden sm:inline">•</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-amber-400">🌐</span>
-              <span>Global Threat Nodes</span>
-            </div>
-          </div>
-
         </div>
       </div>
 
-      {/* ── Featured Core Tools Grid ── */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold font-display text-white flex items-center gap-2">
-            <span className="text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]">⚡</span>
-            Core Intelligence Tools
+      {/* ── 3. Category Filter Navigation ── */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <div>
+          <h2 className="text-xl font-bold font-display text-white flex items-center gap-2">
+            <span>⚔️</span> Specialized Intelligence Modules
           </h2>
-          <span className="text-xs font-mono text-slate-400">Select any engine to open</span>
+          <p className="text-xs text-slate-400 font-mono mt-0.5">
+            Select a dedicated module or trigger automated reconnaissance
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {FEATURED_ENGINES.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => onSelectMode(tool.id)}
-              className={`text-left rounded-2xl cyber-card p-5 border border-white/10 ${tool.glowClass} transition-all duration-300 flex flex-col justify-between group shadow-lg cursor-pointer bg-[#0c121e]/75 backdrop-blur-xl relative overflow-hidden`}
-            >
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-3.5">
-                  <span className="text-2xl p-2.5 rounded-xl bg-white/5 border border-white/10 group-hover:scale-110 group-hover:border-white/20 transition-all duration-300 shadow-inner">
-                    {tool.icon}
-                  </span>
-                  <span className={`text-[9px] font-mono font-bold px-2.5 py-1 rounded-md border uppercase tracking-wider ${tool.badgeColor}`}>
-                    {tool.tag}
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-white group-hover:text-cyan-300 transition-colors font-display">
-                  {tool.title}
-                </h3>
-                <p className="text-xs text-slate-400 mt-2 line-clamp-2 font-sans leading-relaxed">
-                  {tool.desc}
-                </p>
-              </div>
-
-              <div className="relative z-10 mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono text-cyan-400/80 group-hover:text-cyan-300">
-                <span className="font-semibold">Launch Tool</span>
-                <span className="group-hover:translate-x-1.5 transition-transform duration-200 font-bold">→</span>
-              </div>
-            </button>
-          ))}
+        {/* Filter Pills */}
+        <div className="flex bg-black/60 p-1 rounded-xl border border-white/10 shrink-0">
+          {(["all", "recon", "threat", "ops"] as const).map((cat) => {
+            const labels = { all: "All Modules (16)", recon: "Recon (7)", threat: "Threat (5)", ops: "Ops (4)" };
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all uppercase tracking-wider ${
+                  isActive
+                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-bold shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                {labels[cat]}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* ── Operations & Swiss Utilities ── */}
-      <div className="rounded-3xl cyber-card p-6 border border-white/15 shadow-2xl backdrop-blur-2xl">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-base font-bold font-display text-white flex items-center gap-2">
-              <span className="text-cyan-400">⚙️</span>
-              Tactical Operations &amp; Swiss Sec Utilities
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Advanced calculators, cryptographic hash generators, attack path topology, and exportable pentest audits.
-            </p>
+      {/* ── 4. High-Tech Module Cards Grid ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredEngines.map((engine) => (
+          <div
+            key={engine.id}
+            onClick={() => onSelectMode(engine.id)}
+            className="group cyber-card rounded-2xl p-6 border border-white/10 cursor-pointer flex flex-col justify-between hover:border-cyan-400/60 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all duration-300 relative overflow-hidden"
+          >
+            {/* Ambient Corner Flare */}
+            <div
+              className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity pointer-events-none"
+              style={{ backgroundColor: engine.accent }}
+            />
+
+            <div>
+              {/* Header: Icon & Category Tag */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:border-cyan-400/40 transition-transform">
+                  {engine.icon}
+                </div>
+                <span className={`text-[9px] font-mono font-bold px-2.5 py-1 rounded-full border uppercase ${engine.badgeColor}`}>
+                  {engine.tag}
+                </span>
+              </div>
+
+              {/* Title & Description */}
+              <h3 className="text-lg font-bold font-display text-white group-hover:text-cyan-300 transition-colors">
+                {engine.title}
+              </h3>
+              <p className="text-xs text-slate-300 mt-2 line-clamp-3 font-sans leading-relaxed">
+                {engine.desc}
+              </p>
+
+              {/* Capability Badges */}
+              <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-white/5">
+                {engine.capabilities.map((cap) => (
+                  <span
+                    key={cap}
+                    className="text-[10px] font-mono text-slate-400 bg-black/40 px-2 py-0.5 rounded border border-white/5"
+                  >
+                    {cap}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Launch Action */}
+            <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono text-slate-400 group-hover:text-cyan-300 transition-colors">
+              <span className="font-semibold">Launch Engine</span>
+              <span className="transform group-hover:translate-x-1.5 transition-transform">→</span>
+            </div>
           </div>
+        ))}
+      </div>
+
+      {/* ── 5. System Status & Security Telemetry HUD Footer ── */}
+      <div className="cyber-card rounded-2xl p-4 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400">
+        <div className="flex items-center gap-3">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10B981]" />
+          <span className="text-slate-200 font-semibold">ALL 16 INTELLIGENCE ENGINES ONLINE</span>
+          <span className="text-white/20">|</span>
+          <span className="text-cyan-400">API GATEWAY: 0.0.0.0:8000</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {QUICK_ACTIONS.map((qa) => (
-            <button
-              key={qa.id}
-              onClick={() => onSelectMode(qa.id)}
-              className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/50 transition-all text-left group cursor-pointer shadow-md hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]"
-            >
-              <span className="text-2xl p-2 rounded-lg bg-black/40 border border-white/10 group-hover:scale-110 transition-transform">
-                {qa.icon}
-              </span>
-              <div>
-                <div className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
-                  {qa.label}
-                </div>
-                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                  {qa.desc}
-                </div>
-              </div>
-            </button>
-          ))}
+        <div className="flex items-center gap-4 text-[11px]">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400">Edge Ping:</span>
+            <span className="text-emerald-400 font-bold">{pingLatency}ms</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400">Enc:</span>
+            <span className="text-cyan-300 font-bold">TLS 1.3 / AES-256</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400">Policy:</span>
+            <span className="text-slate-300">Zero Retention</span>
+          </div>
         </div>
       </div>
 
