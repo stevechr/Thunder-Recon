@@ -5,6 +5,27 @@
 @tailwind utilities;
 
 :root,
+[data-theme="aurora"] {
+  --bg-main: #03060A;
+  --bg-surface: #070D18;
+  --bg-card: rgba(8, 14, 26, 0.78);
+  --bg-glass: rgba(6, 11, 22, 0.72);
+  --border-color: rgba(0, 245, 212, 0.18);
+  --border-glow: rgba(0, 245, 212, 0.55);
+  --accent-primary: #00F5D4;
+  --accent-secondary: #00B4D8;
+  --accent-gradient: linear-gradient(135deg, #00F5D4 0%, #00B4D8 50%, #9D4EDD 100%);
+  --accent-success: #10B981;
+  --accent-warning: #FFB703;
+  --accent-danger: #FF2A55;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --grid-color: rgba(0, 245, 212, 0.035);
+  --radial-1: rgba(0, 245, 212, 0.12);
+  --radial-2: rgba(157, 78, 221, 0.09);
+}
+
 [data-theme="obsidian"] {
   --bg-main: #04060A;
   --bg-surface: #080D17;

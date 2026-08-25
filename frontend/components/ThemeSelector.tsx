@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 
-export type ThemeType = "obsidian" | "cyberpunk" | "matrix" | "crimson" | "deepblue";
+export type ThemeType = "aurora" | "obsidian" | "cyberpunk" | "matrix" | "crimson" | "deepblue";
 
 export const THEMES: { id: ThemeType; name: string; icon: string; primary: string; bg: string }[] = [
+  { id: "aurora", name: "Quantum Aurora", icon: "✨", primary: "#00F5D4", bg: "#03060A" },
   { id: "obsidian", name: "Cyber Obsidian", icon: "🛡️", primary: "#00F0FF", bg: "#07090E" },
   { id: "cyberpunk", name: "Synth Wave", icon: "🟣", primary: "#D946EF", bg: "#08060F" },
   { id: "matrix", name: "Matrix Terminal", icon: "🟢", primary: "#22C55E", bg: "#030805" },
