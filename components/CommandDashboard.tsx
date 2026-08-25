@@ -7,7 +7,18 @@ interface CommandDashboardProps {
   onQuickScan: (domain: string) => void;
 }
 
+interface CountryNode {
+  name: string;
+  code: string;
+  flag: string;
+  lat: number;
+  lng: number;
+  color: string;
+}
+
 interface AttackParticle {
+  srcCountry: CountryNode;
+  tgtCountry: CountryNode;
   sx: number;
   sy: number;
   tx: number;
@@ -16,6 +27,7 @@ interface AttackParticle {
   speed: number;
   color: string;
   type: string;
+  bandwidth: string;
 }
 
 export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandDashboardProps) {
@@ -24,7 +36,65 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
   const [ddosBandwidth, setDdosBandwidth] = useState(482);
   const [packetRate, setPacketRate] = useState(318);
   const [activeBotCount, setActiveBotCount] = useState(384200);
+  const [recentVectors, setRecentVectors] = useState<Array<{ id: number; text: string; time: string; color: string }>>([
+    { id: 1, text: "🇨🇳 China ➔ 🇺🇸 United States • DDoS Amplification (112 Gbps)", time: "Live", color: "#F43F5E" },
+    { id: 2, text: "🇷🇺 Russia ➔ 🇩🇪 Germany • Mirai Botnet C2 Syn (48 Gbps)", time: "Live", color: "#FFB703" },
+    { id: 3, text: "🇧🇷 Brazil ➔ 🇬🇧 United Kingdom • HTTP/2 Rapid Reset", time: "Live", color: "#00F5D4" },
+  ]);
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Real-world countries with geo-coordinates
+  const COUNTRIES: CountryNode[] = [
+    { name: "United States", code: "USA", flag: "🇺🇸", lat: 38.0, lng: -97.0, color: "#38BDF8" },
+    { name: "Canada", code: "CAN", flag: "🇨🇦", lat: 56.0, lng: -106.0, color: "#38BDF8" },
+    { name: "Brazil", code: "BRA", flag: "🇧🇷", lat: -14.2, lng: -51.9, color: "#F43F5E" },
+    { name: "United Kingdom", code: "GBR", flag: "🇬🇧", lat: 55.3, lng: -3.4, color: "#00F5D4" },
+    { name: "Germany", code: "DEU", flag: "🇩🇪", lat: 51.1, lng: 10.4, color: "#00F5D4" },
+    { name: "France", code: "FRA", flag: "🇫🇷", lat: 46.2, lng: 2.2, color: "#00F5D4" },
+    { name: "Ukraine", code: "UKR", flag: "🇺🇦", lat: 48.3, lng: 31.1, color: "#FFB703" },
+    { name: "Russia", code: "RUS", flag: "🇷🇺", lat: 61.5, lng: 95.3, color: "#F43F5E" },
+    { name: "China", code: "CHN", flag: "🇨🇳", lat: 35.8, lng: 104.1, color: "#F43F5E" },
+    { name: "India", code: "IND", flag: "🇮🇳", lat: 20.5, lng: 78.9, color: "#FFB703" },
+    { name: "Japan", code: "JPN", flag: "🇯🇵", lat: 36.2, lng: 138.2, color: "#38BDF8" },
+    { name: "South Korea", code: "KOR", flag: "🇰🇷", lat: 35.9, lng: 127.7, color: "#38BDF8" },
+    { name: "Singapore", code: "SGP", flag: "🇸🇬", lat: 1.35, lng: 103.8, color: "#00F5D4" },
+    { name: "Australia", code: "AUS", flag: "🇦🇺", lat: -25.2, lng: 133.7, color: "#38BDF8" },
+    { name: "South Africa", code: "ZAF", flag: "🇿🇦", lat: -30.5, lng: 22.9, color: "#F43F5E" },
+    { name: "UAE", code: "ARE", flag: "🇦🇪", lat: 23.4, lng: 53.8, color: "#00F5D4" },
+    { name: "Netherlands", code: "NLD", flag: "🇳🇱", lat: 52.1, lng: 5.2, color: "#00F5D4" },
+  ];
+
+  // Simplified continent polygons for background geo-landmass rendering [lng, lat][]
+  const CONTINENTS: Array<Array<[number, number]>> = [
+    // North America
+    [
+      [-168, 65], [-140, 70], [-120, 75], [-80, 72], [-60, 50],
+      [-70, 42], [-75, 30], [-80, 25], [-97, 20], [-105, 20],
+      [-118, 32], [-124, 48], [-140, 60], [-168, 65]
+    ],
+    // South America
+    [
+      [-78, 10], [-60, 5], [-35, -5], [-38, -15], [-50, -30],
+      [-65, -54], [-75, -45], [-72, -18], [-80, -2], [-78, 10]
+    ],
+    // Eurasia / Europe & Asia
+    [
+      [-10, 36], [0, 44], [15, 55], [30, 70], [60, 72],
+      [100, 75], [140, 72], [170, 65], [140, 50], [130, 35],
+      [120, 22], [105, 10], [90, 22], [75, 10], [60, 25],
+      [50, 30], [35, 32], [25, 36], [10, 38], [-10, 36]
+    ],
+    // Africa
+    [
+      [-18, 30], [10, 37], [32, 32], [50, 12], [42, -5],
+      [35, -25], [20, -35], [12, -20], [8, 4], [-15, 12], [-18, 30]
+    ],
+    // Australia
+    [
+      [114, -22], [125, -15], [142, -11], [153, -28],
+      [150, -38], [135, -36], [115, -34], [114, -22]
+    ]
+  ];
 
   // Live telemetry pulse
   useEffect(() => {
@@ -36,7 +106,7 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
     return () => clearInterval(timer);
   }, []);
 
-  // Home Page Tactical Attack Canvas
+  // Home Page Real World Map Tactical Canvas
   useEffect(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
@@ -44,58 +114,69 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
     if (!ctx) return;
 
     let animId: number;
-    let width = (canvas.width = canvas.parentElement?.clientWidth || 700);
-    let height = (canvas.height = 360);
+    let width = (canvas.width = canvas.parentElement?.clientWidth || 800);
+    let height = (canvas.height = 420);
 
     const handleResize = () => {
       if (!canvas || !canvas.parentElement) return;
       width = canvas.width = canvas.parentElement.clientWidth;
-      height = canvas.height = 360;
+      height = canvas.height = 420;
     };
     window.addEventListener("resize", handleResize);
 
-    const HUBS = [
-      { name: "SF", x: 0.18, y: 0.38, color: "#38BDF8" },
-      { name: "NYC", x: 0.28, y: 0.34, color: "#38BDF8" },
-      { name: "LON", x: 0.48, y: 0.28, color: "#00F5D4" },
-      { name: "FRA", x: 0.53, y: 0.30, color: "#00F5D4" },
-      { name: "TYO", x: 0.84, y: 0.37, color: "#A855F7" },
-      { name: "SIN", x: 0.76, y: 0.58, color: "#00F5D4" },
-      { name: "SYD", x: 0.88, y: 0.78, color: "#38BDF8" },
-      { name: "SAO", x: 0.34, y: 0.72, color: "#F43F5E" },
-      { name: "BOM", x: 0.67, y: 0.46, color: "#FFB703" },
-      { name: "JNB", x: 0.54, y: 0.76, color: "#F43F5E" },
-    ];
+    // Geo projection: Equirectangular [lng, lat] -> [x, y]
+    const project = (lng: number, lat: number) => {
+      const x = ((lng + 180) / 360) * width;
+      const y = ((90 - lat) / 180) * height;
+      return { x, y };
+    };
 
     const ATTACK_TYPES = [
-      { name: "DDoS Amplification", color: "#F43F5E" },
-      { name: "Mirai C2 Botnet", color: "#FFB703" },
-      { name: "HTTP/2 Rapid Reset", color: "#00F5D4" },
-      { name: "SYN Flood Exfil", color: "#A855F7" },
+      { name: "DDoS Volumetric Stream", color: "#F43F5E", minBw: 80, maxBw: 160 },
+      { name: "Mirai C2 Botnet Swarm", color: "#FFB703", minBw: 24, maxBw: 68 },
+      { name: "HTTP/2 Rapid Reset", color: "#00F5D4", minBw: 45, maxBw: 92 },
+      { name: "SYN Flood Exfiltration", color: "#A855F7", minBw: 15, maxBw: 42 },
     ];
 
     let attacks: AttackParticle[] = [];
 
     const spawnAttack = () => {
-      if (attacks.length > 14) return;
-      const sIdx = Math.floor(Math.random() * HUBS.length);
-      let tIdx = Math.floor(Math.random() * HUBS.length);
-      while (tIdx === sIdx) tIdx = Math.floor(Math.random() * HUBS.length);
+      if (attacks.length > 16) return;
+      const sIdx = Math.floor(Math.random() * COUNTRIES.length);
+      let tIdx = Math.floor(Math.random() * COUNTRIES.length);
+      while (tIdx === sIdx) tIdx = Math.floor(Math.random() * COUNTRIES.length);
 
-      const src = HUBS[sIdx];
-      const tgt = HUBS[tIdx];
+      const src = COUNTRIES[sIdx];
+      const tgt = COUNTRIES[tIdx];
+      const srcPt = project(src.lng, src.lat);
+      const tgtPt = project(tgt.lng, tgt.lat);
       const type = ATTACK_TYPES[Math.floor(Math.random() * ATTACK_TYPES.length)];
+      const bw = `${Math.floor(type.minBw + Math.random() * (type.maxBw - type.minBw))} Gbps`;
 
       attacks.push({
-        sx: src.x * width,
-        sy: src.y * height,
-        tx: tgt.x * width,
-        ty: tgt.y * height,
+        srcCountry: src,
+        tgtCountry: tgt,
+        sx: srcPt.x,
+        sy: srcPt.y,
+        tx: tgtPt.x,
+        ty: tgtPt.y,
         progress: 0,
-        speed: 0.008 + Math.random() * 0.012,
+        speed: 0.007 + Math.random() * 0.010,
         color: type.color,
         type: type.name,
+        bandwidth: bw,
       });
+
+      // Update ticker
+      setRecentVectors((prev) => [
+        {
+          id: Date.now() + Math.random(),
+          text: `${src.flag} ${src.name} ➔ ${tgt.flag} ${tgt.name} • ${type.name} (${bw})`,
+          time: new Date().toISOString().substring(11, 19),
+          color: type.color,
+        },
+        ...prev.slice(0, 3),
+      ]);
     };
 
     let pulse = 0;
@@ -103,84 +184,125 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Grid Background
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+      // 1. Tactical Longitude & Latitude Matrix Grid
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
       ctx.lineWidth = 1;
-      for (let x = 0; x <= width; x += 40) {
+
+      // Longitude lines (every 30 deg)
+      for (let lng = -180; lng <= 180; lng += 30) {
+        const x = ((lng + 180) / 360) * width;
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
         ctx.stroke();
       }
-      for (let y = 0; y <= height; y += 40) {
+
+      // Latitude lines (every 30 deg)
+      for (let lat = -90; lat <= 90; lat += 30) {
+        const y = ((90 - lat) / 180) * height;
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
         ctx.stroke();
       }
 
-      // 2. Hubs & Beacons
-      HUBS.forEach((hub) => {
-        const hx = hub.x * width;
-        const hy = hub.y * height;
+      // Equator Highlight
+      const eqY = height / 2;
+      ctx.strokeStyle = "rgba(0, 245, 212, 0.08)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, eqY);
+      ctx.lineTo(width, eqY);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-        // Pulse wave
-        ctx.strokeStyle = `${hub.color}30`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(hx, hy, 4 + ((pulse + hub.x * 10) % 18), 0, Math.PI * 2);
-        ctx.stroke();
+      // 2. Real World Continent Landmass Geometry
+      ctx.fillStyle = "rgba(14, 28, 48, 0.45)";
+      ctx.strokeStyle = "rgba(0, 245, 212, 0.15)";
+      ctx.lineWidth = 1.2;
 
-        // Node dot
-        ctx.fillStyle = hub.color;
+      CONTINENTS.forEach((poly) => {
+        if (poly.length < 2) return;
         ctx.beginPath();
-        ctx.arc(hx, hy, 3.5, 0, Math.PI * 2);
+        const start = project(poly[0][0], poly[0][1]);
+        ctx.moveTo(start.x, start.y);
+        for (let i = 1; i < poly.length; i++) {
+          const pt = project(poly[i][0], poly[i][1]);
+          ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.closePath();
         ctx.fill();
-
-        // Node label
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-        ctx.font = "9px 'Plus Jakarta Sans', sans-serif";
-        ctx.fillText(hub.name, hx + 6, hy - 4);
+        ctx.stroke();
       });
 
-      // 3. Dynamic Attacks & Curves
-      if (Math.random() < 0.12) spawnAttack();
+      // 3. Render Named Countries & Pulsing Nodes
+      COUNTRIES.forEach((c) => {
+        const pt = project(c.lng, c.lat);
+
+        // Pulse beacon ring
+        ctx.strokeStyle = `${c.color}40`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 4 + ((pulse + c.lng * 0.1) % 16), 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Country core beacon
+        ctx.fillStyle = c.color;
+        ctx.shadowColor = c.color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Country Flag & Name Label
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 10px 'Plus Jakarta Sans', sans-serif";
+        ctx.shadowColor = "rgba(0,0,0,0.9)";
+        ctx.shadowBlur = 4;
+        ctx.fillText(`${c.flag} ${c.name}`, pt.x + 7, pt.y - 2);
+        ctx.shadowBlur = 0;
+      });
+
+      // 4. Dynamic Ballistic Attack Trajectory Arcs
+      if (Math.random() < 0.10) spawnAttack();
 
       attacks.forEach((atk, i) => {
         atk.progress += atk.speed;
 
-        // Quadratic curve control point
+        // Quadratic Bezier arc midpoint
         const mx = (atk.sx + atk.tx) / 2;
-        const my = Math.min(atk.sy, atk.ty) - 40;
+        const my = Math.min(atk.sy, atk.ty) - 50;
 
-        // Draw trajectory arc
-        ctx.strokeStyle = `${atk.color}25`;
-        ctx.lineWidth = 1;
+        // Draw trajectory arc line
+        ctx.strokeStyle = `${atk.color}35`;
+        ctx.lineWidth = 1.4;
         ctx.beginPath();
         ctx.moveTo(atk.sx, atk.sy);
         ctx.quadraticCurveTo(mx, my, atk.tx, atk.ty);
         ctx.stroke();
 
-        // Current particle position (Bezier formula)
+        // Interpolated current missile position
         const t = atk.progress;
         const cx = (1 - t) * (1 - t) * atk.sx + 2 * (1 - t) * t * mx + t * t * atk.tx;
         const cy = (1 - t) * (1 - t) * atk.sy + 2 * (1 - t) * t * my + t * t * atk.ty;
 
+        // Glowing particle head
         ctx.fillStyle = atk.color;
         ctx.shadowColor = atk.color;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10;
         ctx.beginPath();
-        ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Remove arrived attacks
+        // Remove completed attacks
         if (atk.progress >= 1) {
           attacks.splice(i, 1);
         }
       });
 
-      pulse += 0.4;
+      pulse += 0.35;
       animId = requestAnimationFrame(render);
     };
 
@@ -191,8 +313,6 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
       cancelAnimationFrame(animId);
     };
   }, []);
-
-
 
   const SECTORS = [
     { name: "Financial & Banking", percent: 34, attacks: "1.4M / hr", color: "bg-rose-500" },
@@ -443,7 +563,7 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
                 Live Cyber Threat &amp; Attack Telemetry
               </h2>
               <p className="text-xs text-slate-400">
-                Real-time volumetric vectors, active botnet swarms, sector targeting, and cross-border incidents
+                Real-world global map with live country attack streams, botnet swarms, and targeted sectors
               </p>
             </div>
           </div>
@@ -460,12 +580,25 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
           </div>
         </div>
 
-        {/* Interactive Tactical Map Canvas */}
-        <div className="w-full relative rounded-2xl bg-black/60 border border-white/5 overflow-hidden h-[360px]">
+        {/* Real World Map Canvas with Named Countries */}
+        <div className="w-full relative rounded-2xl bg-[#040711] border border-white/5 overflow-hidden h-[420px]">
           <canvas ref={mapCanvasRef} className="w-full h-full block" />
           
-          {/* Map Legend Overlay */}
-          <div className="absolute bottom-3 left-3 bg-[#060912]/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 flex flex-wrap items-center gap-4 text-[11px] font-mono">
+          {/* Live Stream Vector Ticker (Top Right) */}
+          <div className="absolute top-3 right-3 max-w-sm hidden sm:block bg-[#060912]/85 backdrop-blur-md p-2.5 rounded-xl border border-white/10 text-[10px] font-mono space-y-1">
+            <div className="text-slate-400 font-bold tracking-wider text-[9px] uppercase border-b border-white/10 pb-1 flex items-center justify-between">
+              <span>ACTIVE INTERCEPT STREAM</span>
+              <span className="text-rose-400 animate-pulse">● LIVE</span>
+            </div>
+            {recentVectors.slice(0, 3).map((vec) => (
+              <div key={vec.id} className="text-slate-300 truncate" style={{ borderLeft: `2px solid ${vec.color}`, paddingLeft: "6px" }}>
+                {vec.text}
+              </div>
+            ))}
+          </div>
+
+          {/* Map Legend Overlay (Bottom Left) */}
+          <div className="absolute bottom-3 left-3 bg-[#060912]/85 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 flex flex-wrap items-center gap-4 text-[11px] font-mono">
             <span className="flex items-center gap-1.5 text-rose-400">
               <span className="w-2 h-2 rounded-full bg-rose-500" /> Volumetric DDoS
             </span>
