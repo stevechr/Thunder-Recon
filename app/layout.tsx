@@ -11,12 +11,23 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://thunder-recon.vercel.app"),
   title: {
-    default: "Thunder Recon — Advanced OSINT, Cyber Threat Intelligence & Attack Surface Platform",
+    default: "Thunder Recon — #1 Free OSINT & Cyber Threat Intelligence Platform",
     template: "%s | Thunder Recon",
   },
   description:
-    "Free all-in-one OSINT surface reconnaissance, DNSSEC validator, SSL/TLS auditor, subdomain enumerator, live cyber attack radar, CVE vulnerability tracker, DMARC/SPF checker, and security scorecard platform.",
+    "Official Thunder Recon platform. Free all-in-one OSINT surface reconnaissance, DNSSEC validator, SSL/TLS auditor, subdomain enumerator, live cyber attack radar, CVE vulnerability tracker, DMARC/SPF checker, and security scorecard platform.",
   keywords: [
+    // Exact Match Brand Keywords
+    "Thunder Recon",
+    "Thunder-Recon",
+    "ThunderRecon",
+    "Thunder Recon OSINT",
+    "Thunder Recon cyber security",
+    "Thunder Recon threat intelligence",
+    "Thunder Recon official",
+    "Thunder Recon vercel app",
+    "https thunder recon vercel app",
+
     // Core Platform Keywords
     "OSINT tool free",
     "cyber threat intelligence platform",
@@ -181,9 +192,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Thunder Recon — Advanced OSINT, Cyber Threat Intelligence & Attack Surface Platform",
+    title: "Thunder Recon — #1 Free OSINT & Cyber Threat Intelligence Platform",
     description:
-      "Enterprise-grade passive OSINT domain reconnaissance, DNSSEC cryptographic auditing, live global cyber attack radar, and automated posture scoring.",
+      "Official Thunder Recon platform. Enterprise-grade passive OSINT domain reconnaissance, DNSSEC cryptographic auditing, live global cyber attack radar, and automated posture scoring.",
     url: "https://thunder-recon.vercel.app",
     siteName: "Thunder Recon",
     images: [
@@ -199,9 +210,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Thunder Recon — Advanced OSINT & Cyber Threat Intelligence",
+    title: "Thunder Recon — #1 Free OSINT & Cyber Threat Intelligence Platform",
     description:
-      "Real-time domain surface analysis, DNSSEC verification, live cyber attack radar, and posture scoring.",
+      "Official Thunder Recon platform. Real-time domain surface analysis, DNSSEC verification, live cyber attack radar, and posture scoring.",
     images: ["https://thunder-recon.vercel.app/og-image.png"],
     creator: "@thunder_recon",
   },
@@ -220,14 +231,42 @@ export const metadata: Metadata = {
   category: "technology, cybersecurity, security, tools",
 };
 
-// Rich Structured Data (JSON-LD) for Google SERP Rich Snippets & AI Overview Citations
+// Rich Structured Data (JSON-LD) for Google SERP Rich Snippets & Exact Match Brand Sitelinks
 const jsonLdData = {
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "WebSite",
+      "@id": "https://thunder-recon.vercel.app/#website",
+      "url": "https://thunder-recon.vercel.app",
+      "name": "Thunder Recon",
+      "alternateName": [
+        "Thunder-Recon",
+        "ThunderRecon",
+        "Thunder Recon OSINT",
+        "Thunder Recon Security Platform",
+        "Thunder Recon Threat Intelligence",
+      ],
+      "description": "Official Thunder Recon OSINT, domain reconnaissance, and cyber threat intelligence platform.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Thunder Recon Security Labs",
+        "url": "https://thunder-recon.vercel.app",
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://thunder-recon.vercel.app/?query={search_term_string}",
+        },
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
       "@type": "WebApplication",
       "@id": "https://thunder-recon.vercel.app/#webapp",
       "name": "Thunder Recon",
+      "alternateName": "Thunder-Recon",
       "url": "https://thunder-recon.vercel.app",
       "applicationCategory": "SecurityApplication",
       "operatingSystem": "All",
@@ -272,6 +311,7 @@ const jsonLdData = {
       "@type": "Organization",
       "@id": "https://thunder-recon.vercel.app/#organization",
       "name": "Thunder Recon Security Labs",
+      "alternateName": "Thunder Recon",
       "url": "https://thunder-recon.vercel.app",
       "logo": "https://thunder-recon.vercel.app/favicon.ico",
       "sameAs": ["https://github.com/stevechr/Thunder-Recon"],

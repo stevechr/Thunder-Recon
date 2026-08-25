@@ -235,14 +235,14 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white leading-tight font-display">
-          Surface Intelligence &amp; <br />
-          <span className="bg-gradient-to-r from-teal-200 via-cyan-300 to-sky-400 bg-clip-text text-transparent">
-            Threat Forensics
+          Thunder Recon <br />
+          <span className="bg-gradient-to-r from-teal-200 via-cyan-300 to-sky-400 bg-clip-text text-transparent text-2xl sm:text-4xl block mt-2 font-semibold">
+            Cyber Threat Intelligence &amp; OSINT Platform
           </span>
         </h1>
 
         <p className="text-base text-slate-400 leading-relaxed font-sans max-w-2xl">
-          Fast, passive OSINT reconnaissance, DNSSEC cryptographic auditing, vulnerability tracking, and security posture scoring.
+          Official Thunder Recon suite. High-speed passive OSINT reconnaissance, DNSSEC cryptographic auditing, live global threat telemetry, and security posture scoring.
         </p>
 
         {/* Omnibar Search Input */}
