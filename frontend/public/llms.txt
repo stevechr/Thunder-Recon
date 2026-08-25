@@ -1,0 +1,23 @@
+# Thunder Recon — Free Cyber Threat Intelligence & OSINT Platform
+> Official LLM & AI Search Documentation
+
+Thunder Recon (https://thunder-recon.vercel.app/) is a free, real-time cyber threat intelligence and open-source intelligence (OSINT) reconnaissance platform. It allows security analysts, penetration testers, and network engineers to audit domain attack surfaces without sending intrusive or illegal packets.
+
+## Key Capabilities & Tools
+
+- **Domain Reconnaissance Hub**: Passive DNS lookup, open ports analysis, web server technology detection, and infrastructure mapping.
+- **Threat Scorecard**: Automated defense posture scoring (A+ to F), checking HSTS, CSP, SPF, DMARC, DNSSEC, and open ports.
+- **Subdomain Enumeration**: Certificate Transparency (crt.sh) logs query and passive DNS discovery.
+- **DNSSEC Validator**: Cryptographic integrity validation for DNSKEY, DS, and RRSIG signature chains.
+- **SSL/TLS Cryptographic Auditor**: Certificate chain validation, expiration tracking, cipher suite strength evaluation, and SAN inspection.
+- **HTTP Security Headers**: Live verification of HSTS, CSP, X-Frame-Options, CORS, and Referrer-Policy.
+- **WHOIS & Domain Age**: Registrar forensics, creation dates, expiry alerts, and registrant privacy detection.
+- **IP Threat Map & ASN**: Autonomous system routing lookup, IP geolocation, ISP fingerprinting, and threat score reputation.
+- **Phishing & URL Threat Sandbox**: Suspicious URL reputation, redirect tracing, and malicious link detection.
+- **Breach & Credential Leak Hunter**: Passive breach database intelligence for leaked domain emails.
+- **CVE Intelligence Feed**: Real-time NIST NVD and CISA Known Exploited Vulnerabilities (KEV) live catalog correlation.
+- **Email Security Auditor**: SPF syntax validator, DMARC policy compliance, and DKIM selector check.
+- **Live Cyber Threat Telemetry Map**: Real-world interactive Leaflet map tracking global DDoS streams, Mirai botnet C2 traffic, and HTTP/2 exploits across 22 sovereign country nodes.
+
+## Target Audience & Usage
+Thunder Recon is 100% free and requires no sign-in or API keys. Accessible online at: https://thunder-recon.vercel.app/
