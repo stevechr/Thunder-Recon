@@ -85,7 +85,6 @@ export default function Home() {
   const [authModalProvider, setAuthModalProvider] = useState<ProviderType>("google");
   const [pendingTargetDomain, setPendingTargetDomain] = useState("");
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [utcTime, setUtcTime] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
@@ -93,11 +92,6 @@ export default function Home() {
       const storedAuth = localStorage.getItem("thunder_recon_auth_user");
       if (storedAuth) setUser(JSON.parse(storedAuth));
     } catch {}
-    
-    const updateTime = () => setUtcTime(new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC');
-    updateTime();
-    const int = setInterval(updateTime, 1000);
-    return () => clearInterval(int);
   }, []);
 
   const handleScan = async (
