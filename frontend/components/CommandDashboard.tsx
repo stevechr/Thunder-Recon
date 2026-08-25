@@ -192,13 +192,7 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
     };
   }, []);
 
-  const SAMPLE_TARGETS = [
-    { name: "cloudflare.com", tag: "Edge & CDN", icon: "☁️" },
-    { name: "github.com", tag: "Code Host", icon: "🐙" },
-    { name: "nasa.gov", tag: "Gov / Aero", icon: "🚀" },
-    { name: "1.1.1.1", tag: "Public DNS", icon: "📡" },
-    { name: "microsoft.com", tag: "Enterprise", icon: "🏢" },
-  ];
+
 
   const SECTORS = [
     { name: "Financial & Banking", percent: 34, attacks: "1.4M / hr", color: "bg-rose-500" },
@@ -422,7 +416,7 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
               type="text"
               value={quickDomain}
               onChange={(e) => setQuickDomain(e.target.value)}
-              placeholder="Enter domain, IPv4/IPv6, or URL (e.g. cloudflare.com)..."
+              placeholder="Enter domain, IPv4/IPv6 address, or URL..."
               className="w-full bg-transparent px-4 py-3 text-white placeholder-slate-500 font-sans text-sm sm:text-base outline-none"
             />
             <button
@@ -435,24 +429,6 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
             </button>
           </div>
         </form>
-
-        {/* Quick Sample Targets */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-          <span className="text-xs text-slate-400 mr-1">Quick targets:</span>
-          {SAMPLE_TARGETS.map((t) => (
-            <button
-              key={t.name}
-              onClick={() => {
-                setQuickDomain(t.name);
-                onQuickScan(t.name);
-              }}
-              className="cyber-glow-pill px-3 py-1.5 rounded-xl text-xs text-slate-300 flex items-center gap-1.5 hover:text-white transition-colors"
-            >
-              <span>{t.icon}</span>
-              <span className="font-medium">{t.name}</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* ── 2. Live Global Attack Map & Cyber Telemetry Hub ── */}
