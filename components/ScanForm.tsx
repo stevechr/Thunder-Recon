@@ -66,9 +66,9 @@ export default function ScanForm({ onScan, loading, user, onUserChange, onReques
         <button
           type="submit"
           disabled={loading || !domain.trim() || !authorized}
-          className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-cyan-signal text-void font-display font-semibold text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition whitespace-nowrap shadow-md"
+          className="w-full sm:w-auto btn-cyber-primary disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
         >
-          {loading ? "Scanning…" : "Run scan"}
+          {loading ? "Scanning…" : "Run Scan →"}
         </button>
       </div>
 

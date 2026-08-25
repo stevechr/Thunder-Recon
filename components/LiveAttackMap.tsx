@@ -1,192 +1,399 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import dynamic from "next/dynamic";
-import * as THREE from "three";
+import React, { useState, useEffect, useRef } from "react";
 
-// Dynamically import Globe because it relies on window/document (WebGL)
-const Globe = dynamic(() => import("react-globe.gl"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex flex-col items-center justify-center font-mono text-cyan-signal text-xs animate-pulse bg-void">
-      <div className="w-8 h-8 rounded-full border-2 border-t-cyan-signal border-r-cyan-signal border-b-transparent border-l-transparent animate-spin mb-4" />
-      Initializing WebGL Cyber Globe...
-    </div>
-  ),
-});
+// Real-World Global Telemetry Sensor Hubs
+const GLOBAL_SENSOR_HUBS = [
+  { id: "us-west", name: "San Francisco (US-West)", lat: 37.7749, lng: -122.4194, flag: "🇺🇸", color: "#00f0ff" },
+  { id: "us-east", name: "New York (US-East)", lat: 40.7128, lng: -74.0060, flag: "🇺🇸", color: "#00f0ff" },
+  { id: "uk-lon", name: "London (EU-West)", lat: 51.5074, lng: -0.1278, flag: "🇬🇧", color: "#3b82f6" },
+  { id: "de-fra", name: "Frankfurt (EU-Central)", lat: 50.1109, lng: 8.6821, flag: "🇩🇪", color: "#6366f1" },
+  { id: "jp-tyo", name: "Tokyo (AP-North)", lat: 35.6762, lng: 139.6503, flag: "🇯🇵", color: "#10b981" },
+  { id: "sg-sin", name: "Singapore (AP-South)", lat: 1.3521, lng: 103.8198, flag: "🇸🇬", color: "#f59e0b" },
+  { id: "au-syd", name: "Sydney (OC-East)", lat: -33.8688, lng: 151.2093, flag: "🇦🇺", color: "#8b5cf6" },
+  { id: "br-sao", name: "São Paulo (SA-East)", lat: -23.5505, lng: -46.6333, flag: "🇧🇷", color: "#ec4899" },
+  { id: "in-bom", name: "Mumbai (AP-West)", lat: 19.0760, lng: 72.8777, flag: "🇮🇳", color: "#14b8a6" },
+  { id: "za-jnb", name: "Johannesburg (AF-South)", lat: -26.2041, lng: 28.0473, flag: "🇿🇦", color: "#eab308" }
+];
 
-// Helper to generate random coordinates (biased slightly towards major tech hubs for realism)
-const randCoords = () => {
-  const hubs = [
-    { lat: 37.77, lng: -122.41 }, // SF
-    { lat: 40.71, lng: -74.00 }, // NY
-    { lat: 51.50, lng: -0.12 }, // London
-    { lat: 55.75, lng: 37.61 }, // Moscow
-    { lat: 39.90, lng: 116.40 }, // Beijing
-    { lat: 35.68, lng: 139.69 }, // Tokyo
-    { lat: -23.55, lng: -46.63 }, // Sao Paulo
-  ];
-  if (Math.random() > 0.6) {
-    const hub = hubs[Math.floor(Math.random() * hubs.length)];
-    return {
-      lat: hub.lat + (Math.random() - 0.5) * 10,
-      lng: hub.lng + (Math.random() - 0.5) * 10,
-    };
-  }
-  return {
-    lat: (Math.random() - 0.5) * 160,
-    lng: (Math.random() - 0.5) * 360,
-  };
-};
-
-// Attack types for visual flair
+// Attack types for visual telemetry
 const ATTACK_TYPES = [
-  { name: "DDoS Amplification", color: "#ff2a2a", port: 53, threat: "CRITICAL" },
-  { name: "SQL Injection", color: "#ff8c00", port: 443, threat: "HIGH" },
-  { name: "SSH Brute-Force", color: "#00ffff", port: 22, threat: "ELEVATED" },
-  { name: "RCE Exploit", color: "#ff00ff", port: 8080, threat: "HIGH" },
-  { name: "Ransomware C2", color: "#ff0044", port: 4444, threat: "CRITICAL" },
+  { name: "DDoS Amplification", color: "#ff2a55", port: 53, threat: "CRITICAL" },
+  { name: "SQL Injection", color: "#f97316", port: 443, threat: "HIGH" },
+  { name: "SSH Brute-Force", color: "#00f0ff", port: 22, threat: "ELEVATED" },
+  { name: "RCE Exploit", color: "#d946ef", port: 8080, threat: "HIGH" },
+  { name: "Ransomware C2", color: "#ef4444", port: 4444, threat: "CRITICAL" },
   { name: "Port Scan", color: "#a855f7", port: 0, threat: "LOW" },
 ];
 
-export default function LiveAttackMap({ isFullscreenBg = false }: { isFullscreenBg?: boolean }) {
-  const globeEl = useRef<any>(null);
-  
+interface LiveAttackMapProps {
+  isFullscreenBg?: boolean;
+}
+
+export default function LiveAttackMap({ isFullscreenBg = false }: LiveAttackMapProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   // Simulation State
-  const [arcsData, setArcsData] = useState<any[]>([]);
-  const [ringsData, setRingsData] = useState<any[]>([]);
+  const [activeVectorsCount, setActiveVectorsCount] = useState(0);
   const [feed, setFeed] = useState<any[]>([]);
-  
-  // Interactive Controls State
   const [isPaused, setIsPaused] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [simSpeed, setSimSpeed] = useState(400); // ms per attack
   const [stats, setStats] = useState({ bandwidth: 0, packets: 0 });
+  const [showGrid, setShowGrid] = useState(true);
 
-  // Auto-rotate globe initially
-  useEffect(() => {
-    if (globeEl.current) {
-      globeEl.current.controls().autoRotate = true;
-      globeEl.current.controls().autoRotateSpeed = 0.5;
-      globeEl.current.pointOfView({ altitude: 2.5 });
-    }
-  }, [globeEl.current]);
+  // Refs for animation loop
+  const arcsRef = useRef<any[]>([]);
+  const impactsRef = useRef<any[]>([]);
+  const animIdRef = useRef<number | null>(null);
+  const isPausedRef = useRef(isPaused);
+  const activeFilterRef = useRef(activeFilter);
+  const showGridRef = useRef(showGrid);
 
-  // Handle auto-rotation pausing
-  useEffect(() => {
-    if (globeEl.current) {
-      globeEl.current.controls().autoRotate = !isPaused;
-    }
-  }, [isPaused]);
+  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
+  useEffect(() => { activeFilterRef.current = activeFilter; }, [activeFilter]);
+  useEffect(() => { showGridRef.current = showGrid; }, [showGrid]);
 
-  // Synthetic attack stream
+  // DEFCON calculation
+  const getDefconLevel = () => {
+    if (activeVectorsCount > 10) return { level: 1, label: "MAXIMUM READINESS", color: "text-rose-500" };
+    if (activeVectorsCount > 5) return { level: 2, label: "HIGH ALERT", color: "text-orange-500" };
+    if (activeVectorsCount > 2) return { level: 3, label: "ELEVATED RISK", color: "text-yellow-400" };
+    return { level: 4, label: "NORMAL SURVEILLANCE", color: "text-emerald-400" };
+  };
+
+  // Convert lat/lng to 2D canvas pixel coordinates
+  const projectCoords = (lat: number, lng: number, width: number, height: number) => {
+    const x = ((lng + 180) / 360) * width;
+    const latRad = (lat * Math.PI) / 180;
+    const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+    const y = height / 2 - (mercN / (2 * Math.PI)) * height * 1.05;
+    return { x, y: Math.max(20, Math.min(height - 20, y)) };
+  };
+
+  // Synthetic attack generation
   useEffect(() => {
     if (isPaused) return;
 
     const interval = setInterval(() => {
       const type = ATTACK_TYPES[Math.floor(Math.random() * ATTACK_TYPES.length)];
-      
-      // If a filter is active and doesn't match, skip rendering but keep clock ticking
-      if (activeFilter && type.name !== activeFilter) return;
+      if (activeFilterRef.current && type.name !== activeFilterRef.current) return;
 
-      const source = randCoords();
-      const target = randCoords();
-      const payloadMb = Math.floor(Math.random() * 500) + 10;
-      
-      const newAttack = {
+      const srcIdx = Math.floor(Math.random() * GLOBAL_SENSOR_HUBS.length);
+      let dstIdx = Math.floor(Math.random() * GLOBAL_SENSOR_HUBS.length);
+      while (dstIdx === srcIdx) {
+        dstIdx = Math.floor(Math.random() * GLOBAL_SENSOR_HUBS.length);
+      }
+
+      const source = GLOBAL_SENSOR_HUBS[srcIdx];
+      const target = GLOBAL_SENSOR_HUBS[dstIdx];
+      const payloadMb = Math.floor(Math.random() * 500) + 12;
+
+      const newArc = {
         id: Math.random().toString(36).substring(7),
-        startLat: source.lat,
-        startLng: source.lng,
-        endLat: target.lat,
-        endLng: target.lng,
-        color: type.color,
+        source,
+        target,
         type: type.name,
+        color: type.color,
         port: type.port,
         threat: type.threat,
         payload: payloadMb,
-        timestamp: new Date().toISOString().split("T")[1].split(".")[0],
+        progress: 0,
+        speed: 0.015 + Math.random() * 0.012,
+        curveOffset: (Math.random() - 0.5) * 80,
       };
 
-      // Add to arcs
-      setArcsData((prev) => [...prev.slice(-60), newAttack]);
-      
-      // Add source ring (small, instant)
-      setRingsData((prev) => [...prev.slice(-40), { ...newAttack, isSource: true }]);
+      arcsRef.current.push(newArc);
+      setActiveVectorsCount(arcsRef.current.length);
 
-      // Add impact ripple (large, delayed to simulate arc travel)
-      setTimeout(() => {
-        setRingsData((prev) => [...prev.slice(-40), { ...newAttack, isSource: false }]);
-      }, 1000);
+      // Add to live log
+      setFeed((prev) => [
+        {
+          id: newArc.id,
+          time: new Date().toLocaleTimeString(),
+          source: source.name,
+          sourceFlag: source.flag,
+          target: target.name,
+          targetFlag: target.flag,
+          type: type.name,
+          color: type.color,
+          payload: payloadMb,
+          port: type.port,
+          threat: type.threat,
+        },
+        ...prev.slice(0, 40),
+      ]);
 
-      // Add to terminal feed
-      setFeed((prev) => [newAttack, ...prev.slice(0, 99)]);
-      
-      // Update HUD stats
-      setStats((prev) => ({
-        bandwidth: prev.bandwidth + payloadMb,
-        packets: prev.packets + Math.floor(Math.random() * 10000),
+      // Telemetry stats
+      setStats((s) => ({
+        bandwidth: Math.min(25000, s.bandwidth + payloadMb * 2.4),
+        packets: s.packets + Math.floor(payloadMb * 180),
       }));
-
     }, simSpeed);
 
     return () => clearInterval(interval);
-  }, [isPaused, activeFilter, simSpeed]);
+  }, [isPaused, simSpeed]);
 
-  // Camera Fly-To function
-  const focusOnTarget = (lat: number, lng: number) => {
-    setIsPaused(true);
-    if (globeEl.current) {
-      globeEl.current.pointOfView({ lat, lng, altitude: 0.8 }, 1500); // 1.5s animation
-    }
-  };
+  // Bandwidth decay
+  useEffect(() => {
+    const decay = setInterval(() => {
+      setStats((s) => ({
+        bandwidth: Math.max(120, Math.floor(s.bandwidth * 0.94)),
+        packets: Math.max(400, Math.floor(s.packets * 0.95)),
+      }));
+    }, 1000);
+    return () => clearInterval(decay);
+  }, []);
 
-  const getDefconLevel = () => {
-    if (simSpeed < 200) return { level: 1, color: "text-red-500", label: "CRITICAL WARFARE" };
-    if (simSpeed <= 400) return { level: 2, color: "text-orange-500", label: "HIGH ALERT" };
-    if (simSpeed <= 800) return { level: 3, color: "text-yellow-500", label: "ELEVATED" };
-    return { level: 4, color: "text-green-500", label: "NORMAL" };
-  };
+  // Main Canvas Render Loop
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = (canvas.width = canvas.parentElement?.clientWidth || 800);
+    let height = (canvas.height = canvas.parentElement?.clientHeight || 600);
+
+    const handleResize = () => {
+      if (!canvas || !canvas.parentElement) return;
+      const dpr = window.devicePixelRatio || 1;
+      width = canvas.parentElement.clientWidth;
+      height = canvas.parentElement.clientHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(dpr, dpr);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // 1. Draw Tactical Matrix Grid
+      if (showGridRef.current) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(0, 245, 212, 0.05)";
+        ctx.lineWidth = 1;
+
+        // Longitude grid lines
+        for (let x = 0; x <= width; x += width / 12) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+
+        // Latitude grid lines
+        for (let y = 0; y <= height; y += height / 8) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+
+        // Equator highlight
+        ctx.strokeStyle = "rgba(0, 245, 212, 0.12)";
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.restore();
+      }
+
+      // 2. Draw Sensor Nodes & Pulse Beacons
+      GLOBAL_SENSOR_HUBS.forEach((hub) => {
+        const pt = projectCoords(hub.lat, hub.lng, width, height);
+
+        // Radar node base
+        ctx.save();
+        ctx.fillStyle = hub.color;
+        ctx.shadowColor = hub.color;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Node pulse wave
+        const waveR = 4 + (Date.now() / 40) % 18;
+        const waveOp = Math.max(0, 1 - waveR / 22);
+        ctx.strokeStyle = hub.color;
+        ctx.globalAlpha = waveOp;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, waveR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+
+        // Hub Text Label
+        ctx.font = "600 9px monospace";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(`${hub.flag} ${hub.id.toUpperCase()}`, pt.x + 8, pt.y + 3);
+        ctx.restore();
+      });
+
+      // 3. Draw Active Ballistic Trajectory Arcs
+      const arcs = arcsRef.current;
+      for (let i = arcs.length - 1; i >= 0; i--) {
+        const arc = arcs[i];
+        if (!isPausedRef.current) {
+          arc.progress += arc.speed;
+        }
+
+        const p1 = projectCoords(arc.source.lat, arc.source.lng, width, height);
+        const p2 = projectCoords(arc.target.lat, arc.target.lng, width, height);
+
+        const midX = (p1.x + p2.x) / 2;
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const midY = (p1.y + p2.y) / 2 - Math.min(dist * 0.35, 120) + arc.curveOffset;
+
+        // Trajectory dashed curve
+        ctx.save();
+        ctx.strokeStyle = arc.color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.quadraticCurveTo(midX, midY, p2.x, p2.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Active traveling missile head
+        const t = Math.min(arc.progress, 1);
+        const headX = (1 - t) * (1 - t) * p1.x + 2 * (1 - t) * t * midX + t * t * p2.x;
+        const headY = (1 - t) * (1 - t) * p1.y + 2 * (1 - t) * t * midY + t * t * p2.y;
+
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = arc.color;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(headX, headY, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = arc.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(headX, headY, 6, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Label on flight path
+        if (t > 0.25 && t < 0.75) {
+          const lbl = `${arc.type} (${arc.payload}MB)`;
+          ctx.font = "bold 9px monospace";
+          const tw = ctx.measureText(lbl).width;
+          ctx.fillStyle = "rgba(4, 8, 16, 0.9)";
+          ctx.fillRect(headX - tw / 2 - 4, headY - 18, tw + 8, 13);
+          ctx.strokeStyle = arc.color;
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(headX - tw / 2 - 4, headY - 18, tw + 8, 13);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(lbl, headX - tw / 2, headY - 8);
+        }
+        ctx.restore();
+
+        // Target Impact
+        if (arc.progress >= 1) {
+          impactsRef.current.push({
+            x: p2.x,
+            y: p2.y,
+            r: 2,
+            op: 1,
+            color: arc.color,
+          });
+          arcs.splice(i, 1);
+          setActiveVectorsCount(arcs.length);
+        }
+      }
+
+      // 4. Draw Expanding Impact Shockwaves
+      const impacts = impactsRef.current;
+      for (let j = impacts.length - 1; j >= 0; j--) {
+        const imp = impacts[j];
+        imp.r += 1.6;
+        imp.op -= 0.04;
+
+        ctx.save();
+        ctx.strokeStyle = imp.color;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = Math.max(0, imp.op);
+        ctx.beginPath();
+        ctx.arc(imp.x, imp.y, imp.r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        if (imp.op <= 0) {
+          impacts.splice(j, 1);
+        }
+      }
+
+      animIdRef.current = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+    };
+  }, []);
 
   const defcon = getDefconLevel();
 
   return (
-    <div className={`w-full flex flex-col lg:flex-row relative font-mono shadow-2xl shadow-cyan-900/10 ${
-      isFullscreenBg 
-        ? "h-full bg-black" 
-        : "gap-4 h-[75vh] min-h-[600px] border border-panelBorder/40 rounded-2xl bg-[#000005] overflow-hidden"
-    }`}>
-      
-      {/* 3D WebGL Globe */}
-      <div className="flex-1 w-full h-full relative cursor-move">
+    <div
+      ref={containerRef}
+      className={`w-full flex flex-col lg:flex-row relative font-mono shadow-2xl ${
+        isFullscreenBg
+          ? "h-full bg-[#02050A]"
+          : "gap-4 h-[75vh] min-h-[580px] border border-cyan-500/20 rounded-2xl bg-[#030712] overflow-hidden"
+      }`}
+    >
+      {/* ── Main 2D Tactical Attack Grid Canvas ── */}
+      <div className="flex-1 w-full h-full relative cursor-crosshair overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(0,245,212,0.06)_0%,rgba(3,7,18,0.95)_75%)]">
         
-        {/* Advanced HUD Top Overlay */}
-        <div className="absolute top-4 left-4 right-4 z-10 pointer-events-none flex justify-between items-start">
+        {/* Top HUD Telemetry Overlay */}
+        <div className="absolute top-4 left-4 right-4 z-10 pointer-events-none flex justify-between items-start gap-4">
           <div className="space-y-2">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2 tracking-widest bg-black/50 p-2 rounded backdrop-blur-md border border-white/10">
-              <span className={`w-2 h-2 rounded-full ${defcon.color.replace('text', 'bg')} ${!isPaused ? 'animate-pulse' : ''}`} />
-              THREAT RADAR
+            <h2 className="text-sm font-bold text-white flex items-center gap-2 tracking-widest bg-black/60 px-3 py-1.5 rounded-lg backdrop-blur-md border border-cyan-500/30 shadow-lg">
+              <span className={`w-2.5 h-2.5 rounded-full ${defcon.color.replace("text-", "bg-")} ${!isPaused ? "animate-ping" : ""}`} />
+              TACTICAL THREAT RADAR
             </h2>
-            <div className="bg-black/50 p-2 rounded backdrop-blur-md border border-white/10 space-y-1">
-              <p className="text-[10px] text-mist/80">Active Vectors: <span className="text-white font-bold">{arcsData.length}</span></p>
-              <p className="text-[10px] text-mist/80">DEFCON: <span className={`${defcon.color} font-bold`}>{defcon.level} ({defcon.label})</span></p>
+            <div className="bg-black/60 p-2.5 rounded-lg backdrop-blur-md border border-white/10 space-y-1 shadow-md">
+              <p className="text-[11px] text-slate-300">
+                Active Vectors: <span className="text-cyan-400 font-bold">{activeVectorsCount}</span>
+              </p>
+              <p className="text-[11px] text-slate-300">
+                DEFCON: <span className={`${defcon.color} font-bold`}>{defcon.level} ({defcon.label})</span>
+              </p>
             </div>
           </div>
 
-          <div className="bg-black/50 p-3 rounded backdrop-blur-md border border-white/10 text-right space-y-1 hidden sm:block">
-            <p className="text-[10px] text-mist/60 uppercase tracking-wider">Global Traffic Impact</p>
-            <p className="text-lg text-cyan-signal font-bold">{(stats.bandwidth / 1024).toFixed(2)} GB/s</p>
-            <p className="text-[10px] text-white/50">{stats.packets.toLocaleString()} Pkt/s intercepted</p>
+          <div className="bg-black/60 p-3 rounded-lg backdrop-blur-md border border-white/10 text-right space-y-1 hidden sm:block shadow-md">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Global Traffic Impact</p>
+            <p className="text-lg text-cyan-400 font-bold">{(stats.bandwidth / 1024).toFixed(2)} GB/s</p>
+            <p className="text-[10px] text-slate-400">{stats.packets.toLocaleString()} Pkt/s intercepted</p>
           </div>
         </div>
 
-        {/* Interactive Controls Overlay (Bottom) */}
-        <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-col sm:flex-row gap-4 justify-between items-end pointer-events-auto">
+        {/* Bottom Interactive Controls Overlay */}
+        <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-col sm:flex-row gap-3 justify-between items-end pointer-events-auto">
           
-          {/* Legend / Filters */}
-          <div className="flex flex-wrap gap-2 max-w-lg bg-black/60 p-2 rounded-lg border border-white/10 backdrop-blur-md">
-            <button 
+          {/* Attack Vector Filter Pills */}
+          <div className="flex flex-wrap gap-1.5 max-w-lg bg-black/70 p-2 rounded-xl border border-white/10 backdrop-blur-md shadow-lg">
+            <button
               onClick={() => setActiveFilter(null)}
-              className={`px-2 py-1 rounded text-[10px] border transition-all ${!activeFilter ? 'border-white text-white bg-white/20' : 'border-white/10 text-mist hover:bg-white/10'}`}
+              className={`px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${
+                !activeFilter
+                  ? "border-cyan-400 text-cyan-300 bg-cyan-500/20 shadow-[0_0_10px_rgba(0,245,212,0.3)]"
+                  : "border-white/10 text-slate-400 hover:bg-white/10"
+              }`}
             >
               ALL
             </button>
@@ -194,11 +401,11 @@ export default function LiveAttackMap({ isFullscreenBg = false }: { isFullscreen
               <button
                 key={t.name}
                 onClick={() => setActiveFilter(t.name)}
-                className={`px-2 py-1 rounded text-[10px] border transition-all flex items-center gap-1.5`}
-                style={{ 
-                  borderColor: activeFilter === t.name ? t.color : 'rgba(255,255,255,0.1)',
-                  backgroundColor: activeFilter === t.name ? `${t.color}20` : 'transparent',
-                  color: activeFilter === t.name ? '#fff' : 'rgba(255,255,255,0.6)'
+                className="px-2.5 py-1 rounded text-[10px] border transition-all flex items-center gap-1.5"
+                style={{
+                  borderColor: activeFilter === t.name ? t.color : "rgba(255,255,255,0.12)",
+                  backgroundColor: activeFilter === t.name ? `${t.color}25` : "transparent",
+                  color: activeFilter === t.name ? "#fff" : "rgba(255,255,255,0.7)",
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.color }} />
@@ -207,105 +414,74 @@ export default function LiveAttackMap({ isFullscreenBg = false }: { isFullscreen
             ))}
           </div>
 
-          {/* Playback & Speed Controls */}
-          <div className="flex items-center gap-4 bg-black/60 p-2 rounded-lg border border-white/10 backdrop-blur-md">
+          {/* Controls: Play/Pause, Speed, Grid Toggle */}
+          <div className="flex items-center gap-3 bg-black/70 p-2 rounded-xl border border-white/10 backdrop-blur-md shadow-lg">
             <button
-              onClick={() => setIsPaused(!isPaused)}
-              className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded transition-all flex items-center gap-2"
+              onClick={() => setShowGrid(!showGrid)}
+              className={`text-xs font-bold px-2.5 py-1.5 rounded transition-all border ${
+                showGrid ? "border-cyan-400/50 bg-cyan-500/15 text-cyan-300" : "border-white/10 bg-white/5 text-slate-400"
+              }`}
+              title="Toggle Tactical Coordinate Grid"
             >
-              {isPaused ? "▶ RESUME" : "⏸ PAUSE"}
+              🌐 GRID: {showGrid ? "ON" : "OFF"}
             </button>
-            <div className="flex items-center gap-2 text-[10px] text-mist">
-              <span>SPEED:</span>
-              <input 
-                type="range" 
-                min="50" 
-                max="1000" 
-                step="50" 
-                value={1050 - simSpeed} // invert for intuitive UI (higher = faster)
-                onChange={(e) => setSimSpeed(1050 - parseInt(e.target.value))}
-                className="w-24 accent-cyan-signal"
-              />
-            </div>
           </div>
-
         </div>
 
-        <Globe
-          ref={globeEl}
-          globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-          bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-          backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-          
-          // Arcs (Pew Pew)
-          arcsData={arcsData}
-          arcStartLat={(d: any) => d.startLat}
-          arcStartLng={(d: any) => d.startLng}
-          arcEndLat={(d: any) => d.endLat}
-          arcEndLng={(d: any) => d.endLng}
-          arcColor={(d: any) => ['rgba(255, 255, 255, 0.8)', d.color]} // Gradient: White origin to Colored impact
-          arcDashLength={0.4}
-          arcDashGap={0.2}
-          arcDashAnimateTime={1200}
-          arcAltitudeAutoScale={0.3}
-          arcLabel={(d: any) => `
-            <div style="background: rgba(0,0,0,0.8); border: 1px solid ${d.color}; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px;">
-              <strong style="color: ${d.color}">${d.type}</strong><br/>
-              Payload: ${d.payload} MB<br/>
-              Target Port: ${d.port}
-            </div>
-          `}
-          
-          // Impact & Source Rings
-          ringsData={ringsData}
-          ringLat={(d: any) => d.isSource ? d.startLat : d.endLat}
-          ringLng={(d: any) => d.isSource ? d.startLng : d.endLng}
-          ringColor={(d: any) => d.color}
-          ringMaxRadius={(d: any) => d.isSource ? 1.5 : 5} // Source rings are small, impact rings are large
-          ringPropagationSpeed={(d: any) => d.isSource ? 1 : 3}
-          ringRepeatPeriod={0}
-        />
+        {/* HTML5 Tactical Canvas */}
+        <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
 
-      {/* Interactive Terminal Log */}
-      <div className="w-full lg:w-96 h-64 lg:h-full bg-black/80 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col font-mono text-[10px] overflow-hidden backdrop-blur-xl relative z-10">
+      {/* ── Right-Side Real-Time Threat Log Stream ── */}
+      <div className="w-full lg:w-96 h-64 lg:h-full bg-black/80 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col font-mono text-[10px] overflow-hidden backdrop-blur-xl shrink-0 z-10">
         <div className="p-3 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-white font-bold tracking-wider">THREAT LOG</span>
-            <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[8px] border border-red-500/30">LIVE</span>
+            <span className="text-white font-bold tracking-wider text-xs">LIVE ATTACK STREAM</span>
+            <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[8px] border border-rose-500/30 font-bold animate-pulse">
+              LIVE
+            </span>
           </div>
-          {isPaused && <span className="text-yellow-500 text-[9px] animate-pulse">PAUSED</span>}
+          <button
+            onClick={() => setFeed([])}
+            className="text-[9px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-white/5 border border-white/10 transition"
+          >
+            Clear
+          </button>
         </div>
-        
-        <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin scrollbar-thumb-white/20">
-          {feed.map((f) => (
-            <div 
-              key={f.id} 
-              onClick={() => focusOnTarget(f.endLat, f.endLng)}
-              className="flex flex-col gap-1 p-2 rounded bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.08] hover:border-white/20 transition-all cursor-pointer group"
-              title="Click to track target on globe"
-            >
-              <div className="flex items-center justify-between opacity-80">
-                <span className="text-mist">{f.timestamp}</span>
-                <span className="text-[8px] px-1 rounded border" style={{ borderColor: f.color, color: f.color }}>{f.threat}</span>
+
+        <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin">
+          {feed.length === 0 ? (
+            <div className="text-center text-slate-500 mt-10 text-[11px]">Awaiting telemetry stream...</div>
+          ) : (
+            feed.map((item) => (
+              <div
+                key={item.id}
+                className="p-2 rounded-lg bg-white/[0.03] border border-white/5 hover:border-white/20 transition flex flex-col gap-1"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-[9px]">{item.time}</span>
+                  <span
+                    className="font-bold px-1.5 py-0.2 rounded text-[8.5px]"
+                    style={{
+                      color: item.color,
+                      backgroundColor: `${item.color}15`,
+                      border: `1px solid ${item.color}30`,
+                    }}
+                  >
+                    {item.type}
+                  </span>
+                </div>
+                <div className="text-slate-200 text-[10px] flex items-center gap-1">
+                  <span>{item.sourceFlag} {item.source}</span>
+                  <span className="text-cyan-400 font-bold">➔</span>
+                  <span>{item.targetFlag} {item.target}</span>
+                </div>
+                <div className="flex justify-between text-[9px] text-slate-400">
+                  <span>Payload: <b className="text-white">{item.payload} MB</b></span>
+                  <span>Port: <b className="text-slate-300">{item.port}</b></span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span style={{ color: f.color }} className="font-bold text-[11px] group-hover:underline">{f.type}</span>
-                <span className="text-mist/60">{f.payload} MB</span>
-              </div>
-              <div className="flex items-center justify-between mt-1 text-[9px]">
-                <span className="text-white/40 truncate flex-1">
-                  {f.startLat.toFixed(1)}, {f.startLng.toFixed(1)}
-                </span>
-                <span className="text-white/20 mx-2">→</span>
-                <span className="text-white/70 truncate flex-1 text-right">
-                  {f.endLat.toFixed(1)}, {f.endLng.toFixed(1)} <span className="text-white/40">:{f.port}</span>
-                </span>
-              </div>
-            </div>
-          ))}
-          {feed.length === 0 && (
-            <div className="text-center text-mist/30 mt-10">Awaiting telemetry...</div>
+            ))
           )}
         </div>
       </div>

@@ -69,7 +69,7 @@ const TABS: TabItem[] = [
   { key: "email",       icon: "📧",  label: "Email DMARC/SPF",    category: "threat" },
   
   // Operations & Toolkit
-  { key: "attack_map",  icon: "🌍",  label: "3D Attack Globe",    category: "ops" },
+  { key: "attack_map",  icon: "🌐",  label: "Tactical Attack Radar", category: "ops" },
   { key: "topology",    icon: "🕸️",  label: "Attack Topology",    category: "ops" },
   { key: "toolkit",     icon: "🔧",  label: "Swiss Sec Toolkit",  category: "ops" },
   { key: "report",      icon: "📑",  label: "Executive Audit",    category: "ops" },
@@ -147,31 +147,31 @@ export default function Home() {
     <div className="flex h-screen w-full cyber-bg-pattern overflow-hidden text-slate-200 font-sans">
       
       {/* ── Sidebar (Glassmorphic) ── */}
-      <div className={`relative z-20 flex flex-col h-full bg-[#090D15]/85 backdrop-blur-2xl border-r border-white/10 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+      <div className={`relative z-20 flex flex-col h-full bg-[#060912]/90 backdrop-blur-2xl border-r border-white/5 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
         
         {/* Sidebar Header */}
         <div 
           onClick={() => { setActiveMode("none"); setResult(null); setError(null); }}
-          className="p-4 flex items-center justify-between border-b border-white/10 bg-black/40 cursor-pointer hover:bg-white/5 transition"
+          className="p-4 flex items-center justify-between border-b border-white/5 bg-transparent cursor-pointer hover:bg-white/[0.03] transition"
           title="Go to Command Dashboard"
         >
           {sidebarOpen && (
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <span className="text-cyan-400 font-mono text-xl drop-shadow-[0_0_10px_rgba(6,182,212,0.6)]">⚡</span>
+              <span className="text-cyan-400 font-mono text-xl">⚡</span>
               <div className="flex flex-col">
-                <span className="font-display font-extrabold text-white tracking-tight whitespace-nowrap text-sm">THUNDER RECON</span>
-                <span className="text-[9px] font-mono text-cyan-400/70 uppercase tracking-wider">Cyber Intelligence</span>
+                <span className="font-display font-bold text-white tracking-tight whitespace-nowrap text-sm">THUNDER RECON</span>
+                <span className="text-[10px] font-sans text-slate-400 tracking-normal">Cyber Intelligence</span>
               </div>
             </div>
           )}
-          {!sidebarOpen && <span className="text-cyan-400 font-mono text-xl mx-auto drop-shadow-[0_0_10px_rgba(6,182,212,0.6)]">⚡</span>}
+          {!sidebarOpen && <span className="text-cyan-400 font-mono text-xl mx-auto">⚡</span>}
         </div>
 
         {/* Sidebar Navigation */}
         <div className="flex-1 overflow-y-auto py-4 scrollbar-thin">
           {Object.entries(groupedTabs).map(([category, items]) => (
             <div key={category} className="mb-5">
-              {sidebarOpen && <div className="px-4 mb-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider">{category}</div>}
+              {sidebarOpen && <div className="px-4 mb-2 text-[10px] font-medium text-slate-400 uppercase tracking-wider">{category}</div>}
               <div className="space-y-0.5 px-2">
                 {items.map((tab) => {
                   const isActive = activeMode === tab.key;
@@ -180,10 +180,10 @@ export default function Home() {
                       key={tab.key}
                       onClick={() => { setActiveMode(tab.key); setResult(null); setError(null); }}
                       title={!sidebarOpen ? tab.label : undefined}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left ${
                         isActive 
-                          ? 'bg-cyan-500/15 border-cyan-400/50 text-cyan-300 border shadow-[0_0_15px_rgba(6,182,212,0.2)] font-semibold' 
-                          : 'border border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
+                          ? 'bg-white/10 text-white font-medium' 
+                          : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
                       }`}
                     >
                       <span className="text-base">{tab.icon}</span>
@@ -197,25 +197,20 @@ export default function Home() {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-white/10 bg-black/40 flex flex-col gap-2.5">
+        <div className="p-3 border-t border-white/5 bg-transparent flex flex-col gap-2">
           <button 
             onClick={() => setIsCommandPaletteOpen(true)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-xs text-slate-300"
+            className="w-full flex items-center justify-between px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-xl transition-all text-xs text-slate-300"
           >
             {sidebarOpen ? (
               <>
-                <span className="flex items-center gap-2"><span className="text-xs">🔍</span> Search Tools</span>
-                <kbd className="text-[9px] bg-black/80 px-1.5 py-0.5 rounded border border-white/20 font-mono text-cyan-400">Cmd+K</kbd>
+                <span className="flex items-center gap-2 text-xs text-slate-400"><span>🔍</span> Search Tools</span>
+                <kbd className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-sans">⌘K</kbd>
               </>
             ) : (
               <span className="text-xs mx-auto">🔍</span>
             )}
           </button>
-          {sidebarOpen && (
-            <div className="text-[9px] font-mono text-slate-400 text-center">
-              Thunder Recon v4.0 • Verified Suite
-            </div>
-          )}
         </div>
       </div>
 
@@ -223,7 +218,7 @@ export default function Home() {
       <div className="flex-1 relative z-10 flex flex-col h-full overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-[#090D15]/80 backdrop-blur-xl shrink-0">
+        <header className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-[#060912]/80 backdrop-blur-xl shrink-0">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -232,31 +227,15 @@ export default function Home() {
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <div className="hidden md:flex items-center gap-2 text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-400/90 font-semibold tracking-wider text-[11px]">SOC SYSTEMS NOMINAL</span>
+            <div className="hidden md:flex items-center gap-2 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-slate-400 text-xs">Systems Operational</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Theme Selector Component */}
             <ThemeSelector />
-
-            <div className="hidden lg:flex items-center gap-2 text-[11px] font-mono text-slate-400 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10">
-              <span className="text-cyan-400">⏱</span>
-              <span>{utcTime}</span>
-            </div>
-            
-            {user ? (
-              <UserHeaderBadge user={user} onSignOut={handleSignOut} />
-            ) : (
-              <button 
-                onClick={() => setIsAuthModalOpen(true)} 
-                className="px-3.5 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 text-xs font-bold hover:bg-cyan-500/25 transition shadow-sm font-mono"
-              >
-                Sign In
-              </button>
-            )}
           </div>
         </header>
 
@@ -280,7 +259,7 @@ export default function Home() {
 
           {/* Active Mode Container */}
           {activeMode !== "none" && (
-            <div className="w-full max-w-6xl flex flex-col items-center animate-fadeIn">
+            <div className="w-full max-w-[1600px] flex flex-col items-center animate-fadeIn">
               
               {/* Top Close / Return to Dashboard Button */}
               <div className="w-full flex justify-between items-center mb-4">
