@@ -169,12 +169,12 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
     },
     {
       id: "email",
-      title: "Email Security & DMARC/SPF",
+      title: "Email Verifier & Anti-Spoofing Defense",
       category: "threat",
       icon: "📧",
-      tag: "Anti-Spoofing",
-      desc: "Audit email deliverability and spoof protection: SPF record syntax, DMARC policy, and DKIM discovery.",
-      capabilities: ["DMARC Policy", "SPF Alignment", "DKIM Selectors"],
+      tag: "Mailbox & Anti-Spoof",
+      desc: "Verify mailbox deliverability, detect disposable burner accounts, test SMTP handshakes, and audit SPF/DKIM/DMARC/BIMI.",
+      capabilities: ["Mailbox Verifier", "Disposable Check", "DMARC / SPF / BIMI"],
     },
     {
       id: "attack_map",

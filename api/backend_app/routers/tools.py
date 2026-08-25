@@ -53,7 +53,13 @@ class WafRequest(BaseModel):
 
 
 class EmailSecurityRequest(BaseModel):
-    domain: str = Field(..., description="Target domain to analyze SPF, DKIM, DMARC")
+    domain: Optional[str] = Field(default=None, description="Target domain or email address to analyze")
+    email: Optional[str] = Field(default=None, description="Target email address to verify")
+    target: Optional[str] = Field(default=None, description="Target domain or email address")
+
+
+class EmailVerifyRequest(BaseModel):
+    email: str = Field(..., description="Target email address to verify deliverability, MX, and validity")
 
 
 class BucketRequest(BaseModel):
@@ -191,16 +197,26 @@ def waf_test(
 
 
 # ---------------------------------------------------------------------------
-# Email Security Analyzer (SPF / DKIM / DMARC / MX)
+# Email Security & Mailbox Verifier (Deliverability, SPF, DKIM, DMARC, BIMI)
 # ---------------------------------------------------------------------------
 
 @router.post("/api/tools/email-security")
 @router.post("/tools/email-security")
 def analyze_email(req: EmailSecurityRequest):
-    domain = req.domain.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")
-    if not domain:
-        raise HTTPException(status_code=400, detail="Domain cannot be empty.")
-    return email_security_service.analyze_email_security(domain)
+    target = req.target or req.email or req.domain or ""
+    target = target.strip().lower().replace("https://", "").replace("http://", "").rstrip("/")
+    if not target:
+        raise HTTPException(status_code=400, detail="Target domain or email address cannot be empty.")
+    return email_security_service.analyze_email_security(target)
+
+
+@router.post("/api/tools/verify-email")
+@router.post("/tools/verify-email")
+def verify_single_email(req: EmailVerifyRequest):
+    email = req.email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email address cannot be empty.")
+    return email_security_service.verify_email_address(email)
 
 
 # ---------------------------------------------------------------------------
