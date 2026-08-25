@@ -470,6 +470,103 @@ export default function CommandDashboard({ onSelectMode, onQuickScan }: CommandD
         ))}
       </div>
 
+      {/* ── 6. Semantic OSINT Knowledge Base & FAQ Section (High-Value SEO & SERP Rich Snippets) ── */}
+      <section aria-label="Cybersecurity Intelligence Knowledge Base & FAQ" className="pt-8 border-t border-white/10 space-y-8">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 text-xs font-mono">
+            <span>📚</span>
+            <span>OSINT &amp; Threat Intelligence Knowledge Base</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white font-display">
+            Frequently Asked Questions &amp; Security Methodology
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Learn how passive reconnaissance, cryptographic verification, and attack surface management protect modern digital infrastructure.
+          </p>
+        </div>
+
+        {/* 4 Security Pillars Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+            <div className="text-xl">🛡️</div>
+            <h3 className="text-sm font-bold text-white">Passive OSINT Reconnaissance</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Non-intrusive asset discovery leveraging DNS topology, WHOIS registry forensics, and Certificate Transparency logs without generating illegal intrusion alarms.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+            <div className="text-xl">🔐</div>
+            <h3 className="text-sm font-bold text-white">DNSSEC &amp; Crypto Auditing</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Cryptographic chain verification for DNSKEY, DS, and RRSIG records alongside TLS 1.3 / 1.2 cipher suite benchmarking and expiration tracking.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+            <div className="text-xl">⚠️</div>
+            <h3 className="text-sm font-bold text-white">CVE &amp; CISA KEV Tracking</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Continuous correlation with NIST NVD and CISA Known Exploited Vulnerabilities catalog to pinpoint zero-day exposures and critical CVSS vectors.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+            <div className="text-xl">📊</div>
+            <h3 className="text-sm font-bold text-white">Automated Defense Scorecards</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Instant A+ to F defensive posture grading evaluating HSTS, CSP policy, SPF/DMARC anti-spoofing, and open surface port hygiene.
+            </p>
+          </div>
+        </div>
+
+        {/* Semantic FAQ Accordion List */}
+        <div className="space-y-3 max-w-4xl mx-auto pt-4">
+          <details className="group p-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all">
+            <summary className="font-semibold text-sm text-white cursor-pointer list-none flex items-center justify-between">
+              <span>What is Thunder Recon and how does OSINT domain reconnaissance work?</span>
+              <span className="text-cyan-400 transition-transform group-open:rotate-180">▼</span>
+            </summary>
+            <p className="text-xs text-slate-400 mt-3 leading-relaxed border-t border-white/5 pt-3">
+              Thunder Recon is an open-source cyber threat intelligence and attack surface management platform. It conducts passive reconnaissance by aggregating public DNS records, Certificate Transparency (crt.sh) logs, WHOIS registry information, and Autonomous System (ASN) route maps without sending intrusive scanning packets directly into target networks.
+            </p>
+          </details>
+
+          <details className="group p-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all">
+            <summary className="font-semibold text-sm text-white cursor-pointer list-none flex items-center justify-between">
+              <span>How does Thunder Recon audit DNSSEC and SSL/TLS certificate chains?</span>
+              <span className="text-cyan-400 transition-transform group-open:rotate-180">▼</span>
+            </summary>
+            <p className="text-xs text-slate-400 mt-3 leading-relaxed border-t border-white/5 pt-3">
+              Thunder Recon verifies DNS Security Extensions (DNSSEC) by querying authoritative root, TLD, and authoritative nameservers for DNSKEY, DS, and RRSIG signature chains. For SSL/TLS, it evaluates the full x509 certificate hierarchy, SAN coverage, SHA-256 fingerprints, and detects deprecated TLS 1.0/1.1 protocols.
+            </p>
+          </details>
+
+          <details className="group p-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all">
+            <summary className="font-semibold text-sm text-white cursor-pointer list-none flex items-center justify-between">
+              <span>How does the Live Cyber Threat &amp; Attack Telemetry map track global attacks?</span>
+              <span className="text-cyan-400 transition-transform group-open:rotate-180">▼</span>
+            </summary>
+            <p className="text-xs text-slate-400 mt-3 leading-relaxed border-t border-white/5 pt-3">
+              The real-world interactive cartographic map plots global threat vectors across 22 sovereign country nodes. It visualizes volumetric DDoS amplification streams, Mirai botnet C2 traffic, and HTTP/2 Rapid Reset exploits calculated along true geographic geodesic arcs with interactive satellite layer switching.
+            </p>
+          </details>
+
+          <details className="group p-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all">
+            <summary className="font-semibold text-sm text-white cursor-pointer list-none flex items-center justify-between">
+              <span>Is Thunder Recon free for penetration testers and SOC analysts?</span>
+              <span className="text-cyan-400 transition-transform group-open:rotate-180">▼</span>
+            </summary>
+            <p className="text-xs text-slate-400 mt-3 leading-relaxed border-t border-white/5 pt-3">
+              Yes, Thunder Recon provides instant access to all 16 specialized reconnaissance, threat intelligence, and security posture scoring engines completely free without mandatory sign-in or API paywalls.
+            </p>
+          </details>
+        </div>
+
+      </section>
+
     </div>
   );
 }
