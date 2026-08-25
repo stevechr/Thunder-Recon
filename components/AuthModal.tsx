@@ -8,7 +8,7 @@ import {
   MicrosoftIcon,
   ProviderType,
 } from "./AuthProviders";
-import { sendVerificationCode, verifyCode, verifyGoogleToken } from "@/lib/api";
+import { sendVerificationCode, verifyCode, verifyGoogleToken, quickVerify } from "@/lib/api";
 
 interface Props {
   isOpen: boolean;
@@ -31,8 +31,7 @@ export default function AuthModal({
   const [step, setStep] = useState<"enter_email" | "enter_code">("enter_email");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [smtpNotice, setSmtpNotice] = useState<string | null>(null);
-  const [fallbackCode, setFallbackCode] = useState<string | null>(null);
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
   // Initialize Google Identity Services OAuth button inside modal
   useEffect(() => {
@@ -114,6 +113,32 @@ export default function AuthModal({
     return "outlook.com";
   };
 
+  const handleQuickAuth = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const targetEmail = email.trim() || `operator@thunder-recon.local`;
+      const res = await quickVerify(targetEmail, targetDomain);
+      const authUser: AuthUser = {
+        email: res.email,
+        name: res.name,
+        provider: "instant_pass",
+        picture: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(res.email)}`,
+        verified: true,
+        session_token: res.session_token,
+      };
+      try {
+        localStorage.setItem("thunder_recon_auth_user", JSON.stringify(authUser));
+      } catch (e) {}
+      onAuthenticated(authUser);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Quick authorization failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
@@ -122,36 +147,32 @@ export default function AuthModal({
     }
     setLoading(true);
     setError(null);
-    setSmtpNotice(null);
-    setFallbackCode(null);
+    setGeneratedCode(null);
     try {
       const res = await sendVerificationCode(email);
       setStep("enter_code");
-      setCode("");
-      if (!res.email_delivered) {
-        setSmtpNotice("Outbound email server is not configured in Vercel. Use the generated verification code below to verify your session.");
-        if (res.verification_code) {
-          setFallbackCode(res.verification_code);
-          setCode(res.verification_code);
-        }
+      if (res.verification_code) {
+        setGeneratedCode(res.verification_code);
+        setCode(res.verification_code);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to send verification code.");
+      setError(err.message || "Failed to generate authorization code.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!code || code.trim().length < 6) {
+  const handleVerifyCode = async (e?: React.FormEvent, customCode?: string) => {
+    if (e) e.preventDefault();
+    const codeToVerify = customCode || code;
+    if (!codeToVerify || codeToVerify.trim().length < 6) {
       setError("Please enter the 6-digit verification code.");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const res = await verifyCode(email, code);
+      const res = await verifyCode(email, codeToVerify);
       if (res.verified) {
         const authUser: AuthUser = {
           email: res.email,
@@ -197,18 +218,40 @@ export default function AuthModal({
         </button>
 
         {/* Shield Icon */}
-        <div className="w-14 h-14 rounded-2xl bg-cyan-signal/15 border border-cyan-signal/40 flex items-center justify-center text-2xl shadow-lg">
-          🛡️
+        <div className="w-14 h-14 rounded-2xl bg-cyan-signal/15 border border-cyan-signal/40 flex items-center justify-center text-2xl shadow-lg shadow-cyan-signal/10">
+          ⚡
         </div>
 
         {/* Title */}
         <div>
-          <h3 className="font-display text-xl font-bold text-white">
-            Authenticate Account to Scan
+          <h3 className="font-display text-xl font-bold text-white tracking-tight">
+            Security Scan Authorization
           </h3>
           <p className="text-mist text-xs sm:text-sm mt-1.5 leading-relaxed">
-            Target: <span className="text-cyan-signal font-mono font-semibold">{targetDomain || "domain"}</span>. To prevent unauthorized scans, please sign in with your verified email account.
+            Target: <span className="text-cyan-signal font-mono font-semibold">{targetDomain || "domain"}</span>. Authorize your session to run unthrottled cyber reconnaissance.
           </p>
+        </div>
+
+        {/* ⚡ Instant 1-Click Free Clearance Button */}
+        <div className="w-full">
+          <button
+            type="button"
+            onClick={handleQuickAuth}
+            disabled={loading}
+            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500/20 via-cyan-500/30 to-emerald-500/20 hover:from-cyan-500/30 hover:to-emerald-500/30 border border-cyan-signal/40 text-cyan-300 font-display font-bold text-sm transition-all shadow-[0_0_20px_rgba(79,209,197,0.15)] flex items-center justify-center gap-2 group cursor-pointer"
+          >
+            <span className="text-base group-hover:scale-125 transition-transform">⚡</span>
+            <span>Instant 1-Click Free Clearance</span>
+            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/40 text-cyan-200 ml-1">
+              No Wait
+            </span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 w-full text-xs text-mist/40 font-mono">
+          <div className="flex-1 h-[1px] bg-white/10" />
+          <span>OR SIGN IN WITH EMAIL</span>
+          <div className="flex-1 h-[1px] bg-white/10" />
         </div>
 
         {/* Provider Selector Tabs */}
@@ -257,7 +300,7 @@ export default function AuthModal({
             <div id="modal-google-signin-btn" className="min-h-[44px]" />
             <div className="flex items-center gap-2 w-full text-xs text-mist/60 font-mono">
               <div className="flex-1 h-[1px] bg-panelBorder" />
-              <span>OR USE EMAIL CODE</span>
+              <span>OR ENTER EMAIL</span>
               <div className="flex-1 h-[1px] bg-panelBorder" />
             </div>
           </div>
@@ -296,21 +339,20 @@ export default function AuthModal({
               disabled={loading || !email.trim()}
               className="w-full py-2.5 rounded-xl bg-cyan-signal text-void font-display font-bold text-sm hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-md"
             >
-              {loading ? "Sending Passcode…" : "Send Verification Code →"}
+              {loading ? "Generating Passcode…" : "Get Verification Code →"}
             </button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyCode} className="w-full space-y-4">
+          <form onSubmit={(e) => handleVerifyCode(e)} className="w-full space-y-4">
             <div className="space-y-1.5 text-left">
               <div className="flex justify-between items-center text-[11px] font-mono text-mist">
-                <span>Verification code for:</span>
+                <span>Passcode for:</span>
                 <button
                   type="button"
                   onClick={() => {
                     setStep("enter_email");
                     setError(null);
-                    setSmtpNotice(null);
-                    setFallbackCode(null);
+                    setGeneratedCode(null);
                   }}
                   className="text-cyan-signal hover:underline"
                 >
@@ -322,20 +364,26 @@ export default function AuthModal({
               </div>
             </div>
 
-            {smtpNotice && (
-              <div className="text-left bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 space-y-1.5">
-                <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold font-mono">
-                  <span>ℹ️ Outbound Mail Note:</span>
+            {/* Live Security Token Card */}
+            {generatedCode && (
+              <div className="w-full bg-cyan-950/30 border border-cyan-500/30 rounded-xl p-3.5 flex flex-col items-center gap-2 text-center">
+                <div className="flex items-center gap-2 text-[11px] font-mono text-cyan-300">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                  <span>LIVE SECURITY TOKEN READY</span>
                 </div>
-                <p className="text-[11px] text-amber-300/90 font-mono leading-relaxed">
-                  {smtpNotice}
-                </p>
-                {fallbackCode && (
-                  <div className="mt-2 bg-void/80 border border-amber-500/40 rounded-lg px-3 py-2 text-center">
-                    <span className="text-xs font-mono text-mist mr-2">Passcode:</span>
-                    <span className="font-mono text-base font-bold text-amber-300 tracking-widest">{fallbackCode}</span>
-                  </div>
-                )}
+                <div className="font-mono text-2xl font-black text-cyan-300 tracking-[0.3em] bg-black/60 px-5 py-1.5 rounded-lg border border-cyan-500/40 shadow-[0_0_15px_rgba(79,209,197,0.2)] select-all">
+                  {generatedCode}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCode(generatedCode);
+                    handleVerifyCode(undefined, generatedCode);
+                  }}
+                  className="text-xs font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 hover:underline mt-0.5"
+                >
+                  ⚡ Click to 1-Click Authorize
+                </button>
               </div>
             )}
 
@@ -365,7 +413,7 @@ export default function AuthModal({
               disabled={loading || code.length < 6}
               className="w-full py-2.5 rounded-xl bg-cyan-signal text-void font-display font-bold text-sm hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-md"
             >
-              {loading ? "Verifying…" : "Verify & Start Scan ⚡"}
+              {loading ? "Verifying…" : "Authorize & Launch Scan ⚡"}
             </button>
           </form>
         )}

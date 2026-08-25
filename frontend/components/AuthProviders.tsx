@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export type ProviderType = "google" | "yahoo" | "microsoft";
+export type ProviderType = "google" | "yahoo" | "microsoft" | "instant_pass" | "email" | "guest";
 
 export interface AuthUser {
   email: string;
@@ -118,7 +118,8 @@ export function ProviderButtonsBar({
     const getProviderIcon = () => {
       if (user.provider === "google") return <GoogleIcon className="w-4 h-4" />;
       if (user.provider === "yahoo") return <YahooIcon className="w-4 h-4" />;
-      return <MicrosoftIcon className="w-4 h-4" />;
+      if (user.provider === "microsoft") return <MicrosoftIcon className="w-4 h-4" />;
+      return <span className="text-sm">⚡</span>;
     };
 
     return (

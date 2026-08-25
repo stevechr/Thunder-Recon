@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import ScanForm from "@/components/ScanForm";
 import ResultsDashboard from "@/components/ResultsDashboard";
 import BreachChecker from "@/components/BreachChecker";
-import MailHeaderAnalyzer from "@/components/MailHeaderAnalyzer";
 import SandboxAnalyzer from "@/components/SandboxAnalyzer";
 import IpIntelligence from "@/components/IpIntelligence";
 import SslInspector from "@/components/SslInspector";
@@ -13,113 +12,67 @@ import CveSearch from "@/components/CveSearch";
 import SecurityToolkit from "@/components/SecurityToolkit";
 import SecurityHeaders from "@/components/SecurityHeaders";
 import WhoisLookup from "@/components/WhoisLookup";
-import TechDetector from "@/components/TechDetector";
 import AuthModal from "@/components/AuthModal";
 import SubdomainEnumerator from "@/components/SubdomainEnumerator";
-import ScanHistory from "@/components/ScanHistory";
-import AsnIntelligence from "@/components/AsnIntelligence";
-import OsintAggregator from "@/components/OsintAggregator";
-import WafTester from "@/components/WafTester";
 import EmailSecurity from "@/components/EmailSecurity";
-import BucketFinder from "@/components/BucketFinder";
-import PhishingDetector from "@/components/PhishingDetector";
-import PortScanner from "@/components/PortScanner";
-import RobotsIntel from "@/components/RobotsIntel";
-import DorkGenerator from "@/components/DorkGenerator";
 import ExecutiveReport from "@/components/ExecutiveReport";
-import AttackSurfaceDiff from "@/components/AttackSurfaceDiff";
-import MitreNavigator from "@/components/MitreNavigator";
-import MonitoringAlerts from "@/components/MonitoringAlerts";
-import LiveThreatFeed from "@/components/LiveThreatFeed";
-import DnsPropagation from "@/components/DnsPropagation";
 import CommandPalette from "@/components/CommandPalette";
 import AttackGraph from "@/components/AttackGraph";
 import LiveAttackMap from "@/components/LiveAttackMap";
+import ThemeSelector from "@/components/ThemeSelector";
+import CommandDashboard from "@/components/CommandDashboard";
+import PostureScorecard from "@/components/PostureScorecard";
 import { UserHeaderBadge, AuthUser, ProviderType } from "@/components/AuthProviders";
 import { runScan, ScanResult } from "@/lib/api";
 
 type Mode =
   | "domain"
-  | "topology"
-  | "sandbox"
-  | "report"
-  | "diff"
-  | "mitre"
-  | "threat_feed"
-  | "alerts"
-  | "dns_prop"
-  | "ip"
-  | "ssl"
+  | "scorecard"
+  | "subdomains"
   | "dns"
+  | "ssl"
   | "headers"
   | "whois"
-  | "tech"
-  | "cve"
-  | "mail_header"
+  | "ip"
+  | "sandbox"
   | "pwned"
+  | "cve"
   | "email"
-  | "buckets"
-  | "phishing"
-  | "ports"
-  | "crawl"
-  | "dorks"
-  | "subdomains"
-  | "waf"
-  | "asn"
-  | "osint"
+  | "attack_map"
+  | "topology"
   | "toolkit"
-  | "history"
-  | "robots"
+  | "report"
   | "none";
 
 interface TabItem {
   key: Mode;
   icon: string;
   label: string;
-  category: "command" | "perimeter" | "threat" | "infra" | "toolkit";
+  category: "recon" | "threat" | "ops";
 }
 
 const TABS: TabItem[] = [
-  // Command & Compliance
-  { key: "topology",    icon: "🕸️",  label: "Attack Topology",    category: "command" },
-  { key: "report",      icon: "📑",  label: "Executive Audit",    category: "command" },
-  { key: "diff",        icon: "⚖️",  label: "Surface Diff",       category: "command" },
-  { key: "mitre",       icon: "🗺️",  label: "MITRE ATT&CK",       category: "command" },
-  { key: "threat_feed", icon: "📡",  label: "CISA KEV Feed",      category: "command" },
-  { key: "alerts",      icon: "🔔",  label: "Alert Webhooks",     category: "command" },
-  
-  // Perimeter & DNS
-  { key: "domain",      icon: "🛡️",  label: "Domain Recon",       category: "perimeter" },
-  { key: "subdomains",  icon: "🌳",  label: "Subdomain Finder",     category: "perimeter" },
-  { key: "dns",         icon: "📡",  label: "DNS Intelligence",     category: "perimeter" },
-  { key: "dns_prop",    icon: "🌐",  label: "DNS Propagation",    category: "perimeter" },
-  { key: "whois",       icon: "🕵️",  label: "WHOIS Intel",          category: "perimeter" },
-  { key: "ssl",         icon: "🔐",  label: "SSL Auditor",          category: "perimeter" },
-  { key: "headers",     icon: "📋",  label: "Security Headers",     category: "perimeter" },
+  // Reconnaissance & Surface
+  { key: "domain",      icon: "🛡️",  label: "Domain Recon Hub",   category: "recon" },
+  { key: "scorecard",   icon: "📊",  label: "Threat Scorecard",   category: "recon" },
+  { key: "subdomains",  icon: "🌳",  label: "Subdomain Finder",   category: "recon" },
+  { key: "dns",         icon: "📡",  label: "DNS Intelligence",   category: "recon" },
+  { key: "ssl",         icon: "🔐",  label: "SSL/TLS Auditor",    category: "recon" },
+  { key: "headers",     icon: "📋",  label: "Security Headers",   category: "recon" },
+  { key: "whois",       icon: "🕵️",  label: "WHOIS Forensics",    category: "recon" },
   
   // Threat & Forensics
-  { key: "sandbox",     icon: "🧪",  label: "Sandbox",             category: "threat" },
-  { key: "pwned",       icon: "☠️",  label: "Breach Intel",         category: "threat" },
-  { key: "phishing",    icon: "🎣",  label: "Phishing Detect",      category: "threat" },
-  { key: "mail_header", icon: "✉️",  label: "Mail Header Forensics",category: "threat" },
-  { key: "cve",         icon: "🚨",  label: "CVE Lookup",           category: "threat" },
-  { key: "osint",       icon: "👁️",  label: "OSINT Aggregate",      category: "threat" },
+  { key: "ip",          icon: "🌐",  label: "IP Threat Map",      category: "threat" },
+  { key: "sandbox",     icon: "🧪",  label: "URL/File Sandbox",   category: "threat" },
+  { key: "pwned",       icon: "☠️",  label: "Breach & Leaks",     category: "threat" },
+  { key: "cve",         icon: "🚨",  label: "CVE Exploit Search", category: "threat" },
+  { key: "email",       icon: "📧",  label: "Email DMARC/SPF",    category: "threat" },
   
-  // Infra & Cloud
-  { key: "ip",          icon: "🌐",  label: "IP Threat Map",        category: "infra" },
-  { key: "asn",         icon: "🏢",  label: "ASN Intel",            category: "infra" },
-  { key: "ports",       icon: "🚪",  label: "Port Scanner",         category: "infra" },
-  { key: "tech",        icon: "🎯",  label: "Stack Fingerprint",    category: "infra" },
-  { key: "buckets",     icon: "🪣",  label: "Cloud Bucket Hunter",  category: "infra" },
-  { key: "waf",         icon: "🧱",  label: "WAF Detector",         category: "infra" },
-  
-  // Toolkits
-  { key: "email",       icon: "📧",  label: "DMARC/SPF Audit",      category: "toolkit" },
-  { key: "crawl",       icon: "🕷️",  label: "Crawler & Links",      category: "toolkit" },
-  { key: "dorks",       icon: "🔍",  label: "Google Dorks",         category: "toolkit" },
-  { key: "robots",      icon: "🤖",  label: "Robots.txt Intel",     category: "toolkit" },
-  { key: "toolkit",     icon: "🔧",  label: "Utility Toolkit",      category: "toolkit" },
-  { key: "history",     icon: "📜",  label: "Scan History",         category: "toolkit" },
+  // Operations & Toolkit
+  { key: "attack_map",  icon: "🌍",  label: "3D Attack Globe",    category: "ops" },
+  { key: "topology",    icon: "🕸️",  label: "Attack Topology",    category: "ops" },
+  { key: "toolkit",     icon: "🔧",  label: "Swiss Sec Toolkit",  category: "ops" },
+  { key: "report",      icon: "📑",  label: "Executive Audit",    category: "ops" },
 ];
 
 export default function Home() {
@@ -185,40 +138,40 @@ export default function Home() {
 
   // Group tabs for sidebar
   const groupedTabs = {
-    "Command & Tactics": TABS.filter(t => t.category === "command"),
-    "Perimeter & DNS": TABS.filter(t => t.category === "perimeter"),
-    "Threat Intelligence": TABS.filter(t => t.category === "threat"),
-    "Infra & Cloud": TABS.filter(t => t.category === "infra"),
-    "Toolkits": TABS.filter(t => t.category === "toolkit"),
+    "Reconnaissance & Surface": TABS.filter(t => t.category === "recon"),
+    "Threat & Vulnerabilities": TABS.filter(t => t.category === "threat"),
+    "Operations & Utilities": TABS.filter(t => t.category === "ops"),
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#000005] overflow-hidden text-mist font-sans">
+    <div className="flex h-screen w-full cyber-bg-pattern overflow-hidden text-slate-200 font-sans">
       
-      {/* ── Background Live Map ── */}
-      <div className="absolute inset-0 z-0 opacity-80 pointer-events-auto">
-        <LiveAttackMap isFullscreenBg={true} />
-      </div>
-
       {/* ── Sidebar (Glassmorphic) ── */}
-      <div className={`relative z-20 flex flex-col h-full bg-black/60 backdrop-blur-xl border-r border-white/10 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+      <div className={`relative z-20 flex flex-col h-full bg-[#090D15]/85 backdrop-blur-2xl border-r border-white/10 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
         
         {/* Sidebar Header */}
-        <div className="p-4 flex items-center justify-between border-b border-white/10 bg-black/40">
+        <div 
+          onClick={() => { setActiveMode("none"); setResult(null); setError(null); }}
+          className="p-4 flex items-center justify-between border-b border-white/10 bg-black/40 cursor-pointer hover:bg-white/5 transition"
+          title="Go to Command Dashboard"
+        >
           {sidebarOpen && (
-            <div className="flex items-center gap-2 overflow-hidden">
-              <span className="text-cyan-signal font-mono text-xl">⚡</span>
-              <span className="font-display font-extrabold text-white tracking-tight whitespace-nowrap">Thunder Recon</span>
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <span className="text-cyan-400 font-mono text-xl drop-shadow-[0_0_10px_rgba(6,182,212,0.6)]">⚡</span>
+              <div className="flex flex-col">
+                <span className="font-display font-extrabold text-white tracking-tight whitespace-nowrap text-sm">THUNDER RECON</span>
+                <span className="text-[9px] font-mono text-cyan-400/70 uppercase tracking-wider">Cyber Intelligence</span>
+              </div>
             </div>
           )}
-          {!sidebarOpen && <span className="text-cyan-signal font-mono text-xl mx-auto">⚡</span>}
+          {!sidebarOpen && <span className="text-cyan-400 font-mono text-xl mx-auto drop-shadow-[0_0_10px_rgba(6,182,212,0.6)]">⚡</span>}
         </div>
 
         {/* Sidebar Navigation */}
-        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-white/10">
+        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin">
           {Object.entries(groupedTabs).map(([category, items]) => (
-            <div key={category} className="mb-6">
-              {sidebarOpen && <div className="px-4 mb-2 text-[10px] font-mono text-mist/40 uppercase tracking-wider">{category}</div>}
+            <div key={category} className="mb-5">
+              {sidebarOpen && <div className="px-4 mb-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider">{category}</div>}
               <div className="space-y-0.5 px-2">
                 {items.map((tab) => {
                   const isActive = activeMode === tab.key;
@@ -229,12 +182,12 @@ export default function Home() {
                       title={!sidebarOpen ? tab.label : undefined}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left ${
                         isActive 
-                          ? 'bg-cyan-signal/20 border-cyan-signal/50 text-cyan-300 border shadow-[0_0_15px_rgba(79,209,197,0.15)]' 
-                          : 'border border-transparent text-mist/70 hover:bg-white/5 hover:text-white'
+                          ? 'bg-cyan-500/15 border-cyan-400/50 text-cyan-300 border shadow-[0_0_15px_rgba(6,182,212,0.2)] font-semibold' 
+                          : 'border border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
                       }`}
                     >
-                      <span className="text-lg">{tab.icon}</span>
-                      {sidebarOpen && <span className="text-sm font-semibold truncate">{tab.label}</span>}
+                      <span className="text-base">{tab.icon}</span>
+                      {sidebarOpen && <span className="text-xs truncate">{tab.label}</span>}
                     </button>
                   );
                 })}
@@ -244,96 +197,117 @@ export default function Home() {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-white/10 bg-black/40 flex flex-col gap-3">
+        <div className="p-3 border-t border-white/10 bg-black/40 flex flex-col gap-2.5">
           <button 
             onClick={() => setIsCommandPaletteOpen(true)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-xs"
+            className="w-full flex items-center justify-between px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-xs text-slate-300"
           >
             {sidebarOpen ? (
               <>
-                <span className="text-mist flex items-center gap-2"><span className="text-sm">🔍</span> Search Tools</span>
-                <kbd className="text-[9px] bg-black px-1.5 py-0.5 rounded border border-white/20 font-mono text-cyan-signal">Cmd+K</kbd>
+                <span className="flex items-center gap-2"><span className="text-xs">🔍</span> Search Tools</span>
+                <kbd className="text-[9px] bg-black/80 px-1.5 py-0.5 rounded border border-white/20 font-mono text-cyan-400">Cmd+K</kbd>
               </>
             ) : (
-              <span className="text-sm mx-auto">🔍</span>
+              <span className="text-xs mx-auto">🔍</span>
             )}
           </button>
           {sidebarOpen && (
-            <div className="text-[9px] font-mono text-mist/30 text-center">
-              Thunder Recon v4.0 • 31 Engines
+            <div className="text-[9px] font-mono text-slate-400 text-center">
+              Thunder Recon v4.0 • Verified Suite
             </div>
           )}
         </div>
       </div>
 
       {/* ── Main Workspace ── */}
-      <div className="flex-1 relative z-10 flex flex-col h-full overflow-hidden pointer-events-none">
+      <div className="flex-1 relative z-10 flex flex-col h-full overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-black/20 backdrop-blur-sm pointer-events-auto">
+        <header className="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-[#090D15]/80 backdrop-blur-xl shrink-0">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-mist hover:text-white p-2 rounded-lg hover:bg-white/5 transition"
+              className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition"
+              title="Toggle Sidebar"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
             <div className="hidden md:flex items-center gap-2 text-xs font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-400/80">SYSTEMS NOMINAL</span>
+              <span className="text-emerald-400/90 font-semibold tracking-wider text-[11px]">SOC SYSTEMS NOMINAL</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-2 text-[11px] font-mono text-cyan-400/70">
+          <div className="flex items-center gap-3">
+            {/* Theme Selector Component */}
+            <ThemeSelector />
+
+            <div className="hidden lg:flex items-center gap-2 text-[11px] font-mono text-slate-400 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10">
+              <span className="text-cyan-400">⏱</span>
               <span>{utcTime}</span>
             </div>
+            
             {user ? (
               <UserHeaderBadge user={user} onSignOut={handleSignOut} />
             ) : (
-              <button onClick={() => setIsAuthModalOpen(true)} className="px-3 py-1.5 rounded-lg bg-cyan-signal/10 border border-cyan-signal/30 text-cyan-signal text-xs font-bold hover:bg-cyan-signal/20 transition">
+              <button 
+                onClick={() => setIsAuthModalOpen(true)} 
+                className="px-3.5 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 text-xs font-bold hover:bg-cyan-500/25 transition shadow-sm font-mono"
+              >
                 Sign In
               </button>
             )}
           </div>
         </header>
 
-        {/* Content Area (Tools render here over the map) */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center pointer-events-auto scrollbar-thin scrollbar-thumb-white/10">
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex justify-center scrollbar-thin">
           
-          {/* Default State: Show nothing but a floating welcome message, Map handles the rest */}
+          {/* Landing State: Modern Cyber Command Dashboard */}
           {activeMode === "none" && (
-            <div className="mt-20 flex flex-col items-center animate-fadeIn pointer-events-none">
-              <div className="px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur-md text-mist text-sm font-mono shadow-2xl flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-signal animate-ping" />
-                Select a tool from the sidebar to begin reconnaissance.
-              </div>
-            </div>
+            <CommandDashboard 
+              onSelectMode={(mode) => { 
+                setActiveMode(mode as Mode); 
+                setResult(null); 
+                setError(null); 
+              }} 
+              onQuickScan={(domain) => {
+                setActiveMode("domain");
+                handleScan(domain, false, true, false, "");
+              }}
+            />
           )}
 
           {/* Active Mode Container */}
           {activeMode !== "none" && (
-            <div className="w-full max-w-6xl flex flex-col items-center animate-fadeInSlideUp">
+            <div className="w-full max-w-6xl flex flex-col items-center animate-fadeIn">
               
-              {/* Top Close Button for the tool */}
-              <div className="w-full flex justify-end mb-2">
+              {/* Top Close / Return to Dashboard Button */}
+              <div className="w-full flex justify-between items-center mb-4">
+                <button
+                  onClick={() => setActiveMode("none")}
+                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-slate-300 transition-all flex items-center gap-2"
+                >
+                  <span>←</span> Return to Command Dashboard
+                </button>
+
                 <button 
                   onClick={() => setActiveMode("none")}
-                  className="px-3 py-1 rounded bg-black/60 border border-white/10 hover:bg-red-500/20 hover:text-red-400 text-xs text-mist backdrop-blur-md transition-all flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 hover:text-rose-300 text-xs text-rose-400 transition-all flex items-center gap-1.5"
                 >
                   ✕ Close Tool
                 </button>
               </div>
 
               {/* The Glassmorphic Tool Wrapper */}
-              <div className="w-full bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 relative">
+              <div className="w-full cyber-card rounded-2xl shadow-2xl p-4 sm:p-8 relative">
                 
                 {/* 1. Domain Recon */}
                 {activeMode === "domain" && (
                   <div className="space-y-6">
                     <ScanForm onScan={handleScan} loading={loading} user={user} onUserChange={setUser} onRequestAuth={handleRequestAuth} />
                     {error && (
-                      <div className="text-crimson-risk text-sm border border-crimson-risk/30 bg-crimson-risk/10 rounded-xl px-4 py-3 font-mono">
+                      <div className="text-rose-400 text-sm border border-rose-500/30 bg-rose-500/10 rounded-xl px-4 py-3 font-mono">
                         <span>⚠</span> {error}
                       </div>
                     )}
@@ -341,36 +315,50 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* All other components */}
-                {activeMode === "topology" && <AttackGraph result={result} />}
-                {activeMode === "sandbox" && <SandboxAnalyzer />}
-                {activeMode === "report" && <ExecutiveReport />}
-                {activeMode === "diff" && <AttackSurfaceDiff />}
-                {activeMode === "mitre" && <MitreNavigator />}
-                {activeMode === "threat_feed" && <LiveThreatFeed />}
-                {activeMode === "alerts" && <MonitoringAlerts />}
-                {activeMode === "dns_prop" && <DnsPropagation />}
-                {activeMode === "ip" && <IpIntelligence />}
-                {activeMode === "ssl" && <SslInspector />}
-                {activeMode === "dns" && <DnsIntelligence />}
-                {activeMode === "headers" && <SecurityHeaders />}
-                {activeMode === "whois" && <WhoisLookup />}
-                {activeMode === "tech" && <TechDetector />}
-                {activeMode === "cve" && <CveSearch />}
-                {activeMode === "mail_header" && <MailHeaderAnalyzer />}
-                {activeMode === "pwned" && <BreachChecker />}
-                {activeMode === "email" && <EmailSecurity />}
-                {activeMode === "buckets" && <BucketFinder />}
-                {activeMode === "phishing" && <PhishingDetector />}
-                {activeMode === "ports" && <PortScanner />}
-                {activeMode === "crawl" && <RobotsIntel />}
-                {activeMode === "dorks" && <DorkGenerator />}
+                {/* 2. Cyber Threat Scorecard */}
+                {activeMode === "scorecard" && <PostureScorecard />}
+
+                {/* 3. Subdomains */}
                 {activeMode === "subdomains" && <SubdomainEnumerator />}
-                {activeMode === "waf" && <WafTester />}
-                {activeMode === "asn" && <AsnIntelligence />}
-                {activeMode === "osint" && <OsintAggregator />}
+
+                {/* 3. DNS Intelligence */}
+                {activeMode === "dns" && <DnsIntelligence />}
+
+                {/* 4. SSL / TLS Auditor */}
+                {activeMode === "ssl" && <SslInspector />}
+
+                {/* 5. Security Headers */}
+                {activeMode === "headers" && <SecurityHeaders />}
+
+                {/* 6. WHOIS Forensics */}
+                {activeMode === "whois" && <WhoisLookup />}
+
+                {/* 7. IP Threat & Geolocation */}
+                {activeMode === "ip" && <IpIntelligence />}
+
+                {/* 8. URL & File Sandbox */}
+                {activeMode === "sandbox" && <SandboxAnalyzer />}
+
+                {/* 9. Breach & Leaks */}
+                {activeMode === "pwned" && <BreachChecker />}
+
+                {/* 10. CVE Exploit Search */}
+                {activeMode === "cve" && <CveSearch />}
+
+                {/* 11. Email DMARC/SPF */}
+                {activeMode === "email" && <EmailSecurity />}
+
+                {/* 12. 3D Attack Globe */}
+                {activeMode === "attack_map" && <LiveAttackMap isFullscreenBg={false} />}
+
+                {/* 13. Attack Topology */}
+                {activeMode === "topology" && <AttackGraph result={result} />}
+
+                {/* 14. Swiss Sec Toolkit */}
                 {activeMode === "toolkit" && <SecurityToolkit />}
-                {activeMode === "history" && <ScanHistory />}
+
+                {/* 15. Executive Audit Report */}
+                {activeMode === "report" && <ExecutiveReport />}
 
               </div>
             </div>
@@ -384,7 +372,7 @@ export default function Home() {
         onSelectMode={(mode) => setActiveMode(mode as Mode)} 
         onTriggerScan={(domain) => {
           setActiveMode("domain");
-          // Optionally trigger scan if possible, or let the user type in the ScanForm
+          handleScan(domain, false, true, false, "");
         }}
       />
 

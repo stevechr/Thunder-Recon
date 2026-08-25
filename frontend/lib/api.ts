@@ -293,6 +293,31 @@ export async function verifyCode(email: string, code: string): Promise<{
   return res.json();
 }
 
+export async function quickVerify(email?: string, targetDomain?: string): Promise<{
+  verified: boolean;
+  email: string;
+  name: string;
+  provider: string;
+  session_token: string;
+  message: string;
+}> {
+  const res = await fetch(`${API_BASE}/api/auth/quick-verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: email?.trim() || undefined,
+      target_domain: targetDomain?.trim() || undefined,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Quick authorization failed" }));
+    throw new Error(err.detail || "Instant verification failed.");
+  }
+
+  return res.json();
+}
+
 export async function checkEmailBreach(email: string): Promise<EmailBreachResult> {
   const res = await fetch(`${API_BASE}/api/breach/email`, {
     method: "POST",
